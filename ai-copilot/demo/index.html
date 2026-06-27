@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Northstar Copilot - AI Workflow Workspace</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --surface-2: #f8faff;
+      --ink: #152033;
+      --muted: #657287;
+      --soft: #e8eef8;
+      --line: #d9e2ef;
+      --line-strong: #b7c5dc;
+      --ai: #3f63ff;
+      --ai-2: #7c5cff;
+      --ok: #087f5b;
+      --ok-bg: #eafaf4;
+      --warn: #a45b00;
+      --warn-bg: #fff4de;
+      --danger: #b42318;
+      --danger-bg: #fff0ef;
+      --shadow: 0 22px 70px rgba(34, 48, 76, .11);
+      --shadow-soft: 0 14px 38px rgba(34, 48, 76, .07);
+      --focus: #8ba2ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(63, 99, 255, .13), transparent 30%),
+        radial-gradient(circle at 88% 12%, rgba(124, 92, 255, .12), transparent 24%),
+        linear-gradient(180deg, #fbfcff 0%, var(--bg) 44%, #eef2f8 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a, button, textarea, input { font: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    textarea:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    button, .button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 9px 13px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    button:hover, .button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      box-shadow: 0 10px 24px rgba(34, 48, 76, .09);
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--ai), var(--ai-2));
+      color: white;
+      border-color: transparent;
+      font-weight: 750;
+    }
+
+    .danger-action {
+      color: var(--danger);
+      border-color: #f0bab5;
+      background: #fff8f7;
+    }
+
+    .shell {
+      width: min(1440px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 42px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 850;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--ai), var(--ai-2));
+      box-shadow: 0 12px 30px rgba(63, 99, 255, .25);
+    }
+
+    .navlinks {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .navlinks a, .top-actions a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
+
+    .navlinks a[aria-current="page"] {
+      color: var(--ink);
+      background: rgba(255, 255, 255, .72);
+      border: 1px solid var(--line);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, .86fr) minmax(680px, 1.34fr);
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .positioning,
+    .workspace,
+    .panel,
+    .composer,
+    .preview-card,
+    .trust-card {
+      background: rgba(255, 255, 255, .9);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .positioning {
+      padding: 26px;
+      display: grid;
+      align-content: space-between;
+      gap: 24px;
+      min-height: 560px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: max-content;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: #41516c;
+      font-size: .86rem;
+      font-weight: 750;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--ok);
+      box-shadow: 0 0 0 5px rgba(8, 127, 91, .12);
+    }
+
+    h1 {
+      margin: 16px 0 14px;
+      max-width: 760px;
+      font-size: clamp(2.6rem, 5.8vw, 6.4rem);
+      line-height: .9;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 620px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .proof {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .proof strong {
+      display: block;
+      font-size: 1.45rem;
+      line-height: 1;
+    }
+
+    .proof span {
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .workspace {
+      overflow: hidden;
+      min-height: 560px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      box-shadow: var(--shadow);
+    }
+
+    .workspace-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #f8faff);
+    }
+
+    .crumbs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: .9rem;
+      flex-wrap: wrap;
+    }
+
+    .workspace-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--warn);
+      font-weight: 760;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr) 300px;
+      gap: 0;
+      min-height: 0;
+    }
+
+    .rail,
+    .context-rail {
+      padding: 14px;
+      background: #fbfcff;
+    }
+
+    .rail { border-right: 1px solid var(--line); }
+    .context-rail { border-left: 1px solid var(--line); }
+
+    .main-flow {
+      padding: 16px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      background: #f7f9fd;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    h2, h3 { letter-spacing: 0; }
+    h2 { margin: 0; font-size: 1rem; }
+    h3 { margin: 0 0 8px; font-size: .94rem; }
+
+    .muted { color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: white;
+      color: #3b4b66;
+      font-size: .86rem;
+      text-decoration: none;
+    }
+
+    .chip.active {
+      color: var(--ai);
+      border-color: #b8c5ff;
+      background: #f0f3ff;
+      font-weight: 760;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--line-strong);
+      flex: 0 0 auto;
+    }
+
+    .dot.ai { background: var(--ai); }
+    .dot.ok { background: var(--ok); }
+    .dot.warn { background: var(--warn); }
+    .dot.danger { background: var(--danger); }
+
+    .plan-list,
+    .source-list,
+    .activity-list,
+    .suggestion-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .plan-step,
+    .source,
+    .activity,
+    .suggestion,
+    .memory-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      padding: 11px;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .plan-step:hover,
+    .source:hover,
+    .suggestion:hover,
+    .memory-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+      box-shadow: 0 12px 26px rgba(34, 48, 76, .08);
+    }
+
+    .plan-step {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .step-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: var(--ai);
+      font-size: .82rem;
+      font-weight: 850;
+    }
+
+    .step-number.done { background: var(--ok); }
+    .step-number.wait { background: var(--warn); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: max-content;
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 760;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      white-space: nowrap;
+    }
+
+    .badge.running { color: var(--ai); background: #eef2ff; border-color: #c6d0ff; }
+    .badge.done { color: var(--ok); background: var(--ok-bg); border-color: #b9ead8; }
+    .badge.warn { color: var(--warn); background: var(--warn-bg); border-color: #f0d49b; }
+    .badge.error { color: var(--danger); background: var(--danger-bg); border-color: #f1bab5; }
+
+    .composer {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .composer-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcff;
+      color: var(--ink);
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .composer-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: white;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .execution-card,
+    .approval-card,
+    .generated-card {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: white;
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .execution-card header,
+    .approval-card header,
+    .generated-card header {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .execution-body,
+    .approval-body,
+    .generated-body { padding: 14px; }
+
+    .progress {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--soft);
+      overflow: hidden;
+      margin: 12px 0 10px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 68%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--ai), var(--ai-2));
+      animation: progressPulse 2.2s ease-in-out infinite;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .tool {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcff;
+    }
+
+    .tool strong { display: block; font-size: .9rem; }
+    .tool span { color: var(--muted); font-size: .82rem; }
+
+    .approval-card {
+      border-color: #edcd91;
+      background: linear-gradient(180deg, #fffaf0, white 44%);
+    }
+
+    .approval-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .meta {
+      padding: 10px;
+      border: 1px solid #f0d49b;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .72);
+    }
+
+    .generated-card {
+      background: #111a2c;
+      color: #eef4ff;
+      border-color: #24395d;
+    }
+
+    .generated-card header { border-color: #24395d; }
+    .generated-card .muted { color: #aebde0; }
+
+    .doc-preview {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid #2b416a;
+      border-radius: 12px;
+      background: #0b1221;
+      line-height: 1.55;
+    }
+
+    .doc-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 10px;
+    }
+
+    .doc-row span:first-child { color: #9fb0da; }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .preview-actions button:not(.primary) {
+      color: #eaf0ff;
+      background: #17233b;
+      border-color: #344a75;
+    }
+
+    .source {
+      display: grid;
+      gap: 5px;
+    }
+
+    .source-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .confidence {
+      height: 6px;
+      background: var(--soft);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .confidence span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--ai);
+    }
+
+    .activity {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .time {
+      color: var(--muted);
+      font-size: .8rem;
+      white-space: nowrap;
+    }
+
+    .trust-section {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .trust-card {
+      padding: 18px;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .control {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .toggle {
+      width: 42px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--ai);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+    }
+
+    .toggle::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      top: 3px;
+      right: 3px;
+      background: white;
+      box-shadow: 0 3px 8px rgba(0,0,0,.16);
+    }
+
+    .cta-card {
+      display: grid;
+      align-content: space-between;
+      gap: 16px;
+      padding: 22px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #152033, #26376c);
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .cta-card p { color: #d8e2ff; }
+
+    .cta-card .button:not(.primary) {
+      color: white;
+      background: rgba(255,255,255,.1);
+      border-color: rgba(255,255,255,.24);
+    }
+
+    .screen-reader-note {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    @keyframes progressPulse {
+      0%, 100% { width: 62%; }
+      50% { width: 78%; }
+    }
+
+    @media (max-width: 1180px) {
+      .hero { grid-template-columns: 1fr; }
+      .positioning { min-height: auto; }
+      .workspace-grid { grid-template-columns: 220px minmax(0, 1fr); }
+      .context-rail { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); }
+      .context-rail .source-list { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 20px, 1440px); padding-top: 10px; }
+      .topbar { grid-template-columns: 1fr; }
+      .navlinks { justify-content: flex-start; }
+      h1 { font-size: clamp(2.35rem, 15vw, 4.2rem); }
+      .proof-strip,
+      .workspace-grid,
+      .tool-grid,
+      .approval-meta,
+      .trust-section,
+      .control-grid,
+      .context-rail .source-list { grid-template-columns: 1fr; }
+      .rail { border-right: 0; border-bottom: 1px solid var(--line); }
+      .context-rail { grid-column: auto; }
+      .workspace-header { align-items: flex-start; flex-direction: column; }
+      .doc-row { grid-template-columns: 1fr; }
+      .composer-actions { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+
+      button:hover,
+      .button:hover,
+      .plan-step:hover,
+      .source:hover,
+      .suggestion:hover,
+      .memory-card:hover {
+        transform: none;
+      }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="topbar" aria-label="Product navigation">
+      <div class="brand"><span class="mark">N</span><span>Northstar Copilot</span></div>
+      <div class="navlinks">
+        <a href="../../index.html">Demo index</a>
+        <a href="#workspace" aria-current="page">Workspace</a>
+        <a href="#controls">Controls</a>
+        <a href="#proof">Proof</a>
+      </div>
+      <div class="top-actions">
+        <a href="#workspace">Open recovery room</a>
+        <button class="primary" type="button">Run playbook</button>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <article class="positioning">
+          <div>
+            <span class="eyebrow"><span class="live-dot"></span> AI workflow copilot for launch operations</span>
+            <h1 id="page-title">Turn a messy launch incident into approved action.</h1>
+            <p class="lead">Northstar Copilot helps product ops teams gather context, plan the recovery, draft customer-safe output, and ask for human approval before anything leaves the workspace.</p>
+            <div class="hero-actions">
+              <a class="button primary" href="#workspace">Review live workspace</a>
+              <a class="button" href="#controls">See trust controls</a>
+            </div>
+          </div>
+
+          <div class="proof-strip" aria-label="Product proof metrics">
+            <div class="proof"><strong>18</strong><span>admins affected</span></div>
+            <div class="proof"><strong>4</strong><span>sources attached</span></div>
+            <div class="proof"><strong>92%</strong><span>draft confidence</span></div>
+          </div>
+        </article>
+
+        <section id="workspace" class="workspace" aria-label="AI copilot product workspace">
+          <header class="workspace-header">
+            <div>
+              <div class="crumbs"><span>Launch room</span><span>/</span><strong>Payments rollout recovery</strong><span class="badge warn">Customer impact</span></div>
+            </div>
+            <div class="workspace-status"><span class="dot warn"></span> Waiting for send approval</div>
+          </header>
+
+          <div class="workspace-grid">
+            <aside class="rail" aria-labelledby="plan-title">
+              <div class="section-title"><h2 id="plan-title">Agent plan</h2><span class="badge running">Running</span></div>
+              <div class="plan-list">
+                <article class="plan-step" tabindex="0"><span class="step-number done">1</span><div><strong>Collect incident context</strong><p class="muted">Read Jira, Slack, status page, and CRM account list.</p></div><span class="badge done">Done</span></article>
+                <article class="plan-step" tabindex="0"><span class="step-number done">2</span><div><strong>Compare similar launches</strong><p class="muted">Matched 3 previous payment rollouts with delayed QA.</p></div><span class="badge done">Done</span></article>
+                <article class="plan-step" tabindex="0"><span class="step-number">3</span><div><strong>Draft customer-safe update</strong><p class="muted">Use approved tone and no internal incident IDs.</p></div><span class="badge running">Writing</span></article>
+                <article class="plan-step" tabindex="0"><span class="step-number wait">4</span><div><strong>Request human approval</strong><p class="muted">Email and status-page update require product ops review.</p></div><span class="badge warn">Blocked</span></article>
+              </div>
+            </aside>
+
+            <section class="main-flow" aria-label="Conversation and execution surface">
+              <form class="composer" aria-label="Task composer">
+                <div class="composer-top">
+                  <div class="chips" aria-label="Workspace memory chips">
+                    <span class="chip active"><span class="dot ai"></span> customer-safe tone</span>
+                    <span class="chip"><span class="dot ok"></span> enterprise admins</span>
+                    <span class="chip"><span class="dot warn"></span> approval required</span>
+                  </div>
+                  <span class="muted"><span class="kbd">?</span> <span class="kbd">Enter</span> run</span>
+                </div>
+                <label class="screen-reader-note" for="task-command">Command</label>
+                <textarea id="task-command">Create a recovery plan for the delayed payments rollout. Draft the customer update, attach evidence, and ask me before sending to admins.</textarea>
+                <div class="composer-actions">
+                  <span class="muted">Tools available: Jira, Slack, CRM, StatusPage, Docs</span>
+                  <div><button type="button">Save as playbook</button> <button class="primary" type="button">Run copilot</button></div>
+                </div>
+              </form>
+
+              <article class="execution-card" aria-live="polite">
+                <header><h2>Tool execution</h2><span class="badge running"><span class="dot ai"></span> Searching support tickets</span></header>
+                <div class="execution-body">
+                  <p class="muted">Northstar is checking open Zendesk conversations for language that should be reflected in the customer note.</p>
+                  <div class="progress" aria-label="Execution progress"><span></span></div>
+                  <div class="tool-grid">
+                    <div class="tool"><strong>Jira</strong><span>EP-418 read - 18 notes</span></div>
+                    <div class="tool"><strong>Slack</strong><span>#launch-room summarized</span></div>
+                    <div class="tool"><strong>CRM</strong><span>18 impacted admins</span></div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="approval-card" aria-labelledby="approval-title">
+                <header><h2 id="approval-title">Approval required</h2><span class="badge warn">External send</span></header>
+                <div class="approval-body">
+                  <p>This action will email 18 enterprise admins and update the public status page. The draft is reversible for 10 minutes, but external recipients may see it immediately.</p>
+                  <div class="approval-meta" aria-label="Approval details">
+                    <div class="meta"><strong>Audience</strong><br><span class="muted">Enterprise admins</span></div>
+                    <div class="meta"><strong>Owner</strong><br><span class="muted">Maya Chen</span></div>
+                    <div class="meta"><strong>Risk</strong><br><span class="muted">Public comms</span></div>
+                  </div>
+                  <button class="primary" type="button">Approve send</button> <button type="button">Edit draft</button> <button class="danger-action" type="button">Cancel action</button>
+                </div>
+              </article>
+            </section>
+
+            <aside class="context-rail" aria-labelledby="context-title">
+              <div class="section-title"><h2 id="context-title">Context and sources</h2><span class="badge done">4 attached</span></div>
+              <div class="source-list">
+                <article class="source" tabindex="0"><div class="source-top"><strong>INC-284 summary</strong><span>97%</span></div><p class="muted">Payment QA blocked rollout at 09:14 UTC.</p><div class="confidence"><span style="width:97%"></span></div></article>
+                <article class="source" tabindex="0"><div class="source-top"><strong>Slack launch room</strong><span>88%</span></div><p class="muted">Maya confirmed no data loss; ETA moved to 16:00 UTC.</p><div class="confidence"><span style="width:88%"></span></div></article>
+                <article class="source" tabindex="0"><div class="source-top"><strong>CRM segment</strong><span>74%</span></div><p class="muted">18 admins in regulated accounts should receive update.</p><div class="confidence"><span style="width:74%"></span></div></article>
+                <article class="source" tabindex="0"><div class="source-top"><strong>Comms policy</strong><span>92%</span></div><p class="muted">Avoid incident IDs and include next update time.</p><div class="confidence"><span style="width:92%"></span></div></article>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </section>
+
+      <section class="trust-section" id="proof" aria-label="Output review and activity timeline">
+        <article class="generated-card">
+          <header><h2>Generated output preview</h2><span class="badge done">Ready for review</span></header>
+          <div class="generated-body">
+            <div class="doc-preview">
+              <div class="doc-row"><span>Subject</span><strong>Payments rollout update: extended QA window</strong></div>
+              <div class="doc-row"><span>Customer note</span><div>We are extending the rollout window by 90 minutes to complete payment quality checks. No customer data was lost, and existing payment flows remain available. The next update will be posted by 16:00 UTC.</div></div>
+              <div class="doc-row"><span>Evidence</span><div>INC-284 summary, Slack confirmation from Maya Chen, CRM impacted-admin list, communications policy.</div></div>
+            </div>
+            <div class="preview-actions"><button class="primary" type="button">Accept draft</button><button type="button">Regenerate shorter</button><button type="button">Copy preview</button><button type="button">Compare previous</button></div>
+          </div>
+        </article>
+
+        <aside class="trust-card" aria-labelledby="activity-title">
+          <div class="section-title"><h2 id="activity-title">Activity timeline</h2><span class="badge running">Live</span></div>
+          <div class="activity-list">
+            <div class="activity"><span class="time">11:42</span><div><strong>Draft completed</strong><br><span class="muted">Customer-safe language checked against comms policy.</span></div></div>
+            <div class="activity"><span class="time">11:40</span><div><strong>Source attached</strong><br><span class="muted">CRM list added 18 impacted admins.</span></div></div>
+            <div class="activity"><span class="time">11:37</span><div><strong class="muted">Retry succeeded</strong><br><span class="muted">Support ticket search recovered after timeout.</span></div></div>
+            <div class="activity"><span class="time">11:34</span><div><strong>Plan generated</strong><br><span class="muted">4 steps, 1 external approval, 2 reversible actions.</span></div></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="trust-section" id="controls" aria-label="Trust controls and follow-up suggestions">
+        <article class="trust-card">
+          <div class="section-title"><h2>Human control surface</h2><span class="badge done">Enabled</span></div>
+          <p class="muted">Northstar separates recommendations, drafts, queued actions, and completed actions so operators know exactly what the agent can do.</p>
+          <div class="control-grid">
+            <div class="control"><div class="section-title"><strong>Approval before external sends</strong><span class="toggle" aria-hidden="true"></span></div><span class="muted">Email, status page, and CRM updates require review.</span></div>
+            <div class="control"><div class="section-title"><strong>Undo window</strong><span class="badge done">10 min</span></div><span class="muted">Reversible actions stay available in the timeline.</span></div>
+            <div class="control"><div class="section-title"><strong>Source confidence</strong><span class="badge running">Shown</span></div><span class="muted">Every output keeps provenance within reach.</span></div>
+            <div class="control"><div class="section-title"><strong>Memory scope</strong><span class="badge warn">Workspace only</span></div><span class="muted">Customer-safe tone applies only to launch rooms.</span></div>
+          </div>
+        </article>
+
+        <article class="cta-card">
+          <div>
+            <h2>Run the next launch room with approvals built in.</h2>
+            <p>Connect project tools, define approval rules, and give your operators an agent that can draft, inspect, retry, and wait.</p>
+          </div>
+          <div class="hero-actions"><a class="button primary" href="#workspace">Open sample workspace</a><a class="button" href="../../index.html">Back to demos</a></div>
+        </article>
+      </section>
+    
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Approval ledger with reversible and irreversible agent actions.</h2>
+        <p>The agent workspace becomes premium when buyers can inspect the action ledger: what system changed, who approved it, what can be undone, and what evidence was attached.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="artifact-row"><span class="artifact-node">A1</span><div><strong>Status page update</strong><span>External effect - reversible for 10 minutes</span></div><span class="artifact-pill">Approval</span></div>
+        <div class="artifact-row"><span class="artifact-node">A2</span><div><strong>Zendesk customer reply</strong><span>18 admins affected - legal source attached</span></div><span class="artifact-pill">Queued</span></div>
+        <div class="artifact-row"><span class="artifact-node">A3</span><div><strong>Salesforce case note</strong><span>Internal only - auto-saved with source links</span></div><span class="artifact-pill">Done</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Enterprise recovery workflow">
+      <div>
+        <span class="proof-label">Enterprise recovery workflow</span>
+        <h2>Built around one accountable agent run, not a chat transcript.</h2>
+        <p>Northstar Copilot shows the full buyer-critical loop: prompt intake, plan review, tool execution, approval risk, generated output, source context, memory controls, and audited final action.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>4 systems</strong><span>Salesforce, Jira, Slack, Zendesk in one run</span></div>
+        <div class="client-proof-kpi"><strong>2 approvals</strong><span>legal send and customer escalation gates</span></div>
+        <div class="client-proof-kpi"><strong>11 min</strong><span>from issue brief to reviewed recovery plan</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>Every visible card names an owner, affected object, source, confidence, or consequence.</span></div>
+      </div>
+    </section></main>
+  </div>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+</body>
+</html>

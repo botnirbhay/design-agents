@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VectorWatch - Incident Command Center</title>
+  <style>
+    :root {
+      --bg: #05080d;
+      --panel: #0c121a;
+      --panel-2: #101923;
+      --panel-3: #071017;
+      --ink: #eaf2fa;
+      --muted: #9aa8b7;
+      --soft: #718195;
+      --line: #243244;
+      --line-strong: #39506a;
+      --accent: #6aa6ff;
+      --info: #7bb7ff;
+      --ok: #42d392;
+      --warn: #f2c14e;
+      --bad: #ff6b6b;
+      --critical-bg: rgba(255, 107, 107, .13);
+      --warn-bg: rgba(242, 193, 78, .12);
+      --ok-bg: rgba(66, 211, 146, .1);
+      --focus: #9cc9ff;
+      --shadow: 0 20px 58px rgba(0,0,0,.34);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% -8%, rgba(106, 166, 255, .16), transparent 28%),
+        radial-gradient(circle at 92% 0%, rgba(255, 107, 107, .12), transparent 24%),
+        linear-gradient(180deg, #05070b, var(--bg));
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a, button, input, select, textarea { font: inherit; }
+    a { color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    button, .button, input, select, textarea {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    button, .button {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 7px 10px;
+      color: var(--ink);
+      background: #111b26;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+
+    button:hover, .button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: #152232;
+      box-shadow: 0 10px 26px rgba(0,0,0,.2);
+    }
+
+    button:active, .button:active { transform: translateY(0) scale(.99); }
+
+    .primary { background: linear-gradient(135deg, #1f67ff, #138a6d); border-color: transparent; font-weight: 850; }
+    .danger { background: #33171c; border-color: #74313b; color: #ffd9dd; }
+    .ghost { background: #0a1118; }
+
+    input, select, textarea {
+      min-height: 34px;
+      padding: 7px 9px;
+      color: var(--ink);
+      background: var(--panel-3);
+    }
+
+    .ops {
+      width: min(1600px, calc(100% - 20px));
+      margin: 0 auto;
+      padding: 10px 0 22px;
+    }
+
+    .topbar, .panel, .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 8px;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 10px;
+      margin-bottom: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .mark {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), var(--ok));
+      color: #061017;
+      box-shadow: 0 12px 34px rgba(106,166,255,.22);
+    }
+
+    .filters, .actions, .chips {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .filters { justify-content: center; }
+    .actions { justify-content: flex-end; }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font-size: clamp(1.45rem, 3vw, 3rem); line-height: 1; letter-spacing: 0; }
+    h2 { margin-bottom: 10px; font-size: 1.05rem; line-height: 1.15; }
+    h3 { margin-bottom: 7px; font-size: .92rem; line-height: 1.2; }
+
+    .muted { color: var(--muted); }
+    .soft { color: var(--soft); }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .info { color: var(--info); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    .tag, .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: max-content;
+      max-width: 100%;
+      padding: 4px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: #0a1118;
+      font-size: .76rem;
+      font-weight: 850;
+    }
+
+    .status.critical { color: #ffd7dc; background: var(--critical-bg); border-color: #74313b; }
+    .status.warn { color: #ffe6a5; background: var(--warn-bg); border-color: #665226; }
+    .status.ok { color: #cbffe6; background: var(--ok-bg); border-color: #275d48; }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+      flex: none;
+    }
+
+    .dot.critical {
+      background: var(--bad);
+      box-shadow: 0 0 0 5px rgba(255, 107, 107, .12);
+      animation: urgent 1.8s ease-in-out infinite;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr) 360px;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .left, .right, .main { display: grid; gap: 10px; }
+
+    .panel, .card { padding: 12px; }
+
+    .overview {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(300px, 1.25fr) repeat(5, minmax(130px, .6fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .summary {
+      padding: 14px;
+      border-left: 4px solid var(--bad);
+      background: linear-gradient(135deg, rgba(255,107,107,.12), rgba(12,18,26,.96));
+    }
+
+    .metric-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .metric {
+      font-size: 1.9rem;
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: 0;
+      margin: 5px 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .queue { display: grid; gap: 7px; }
+
+    .incident {
+      display: grid;
+      gap: 7px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-left-width: 4px;
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      transition: border-color .16s ease, background .16s ease, transform .16s ease;
+    }
+
+    .incident:hover { transform: translateY(-1px); background: #132030; border-color: var(--line-strong); }
+    .incident.p1 { border-left-color: var(--bad); }
+    .incident.p2 { border-left-color: var(--warn); }
+    .incident.p3 { border-left-color: var(--info); }
+
+    .incident-head, .row, .timeline-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .incident-title { font-weight: 900; }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--soft);
+      font-size: .8rem;
+    }
+
+    .row {
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-3);
+    }
+
+    .service-map {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .service {
+      min-height: 86px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-3);
+      display: grid;
+      align-content: space-between;
+    }
+
+    .service.critical { border-color: #74313b; background: var(--critical-bg); }
+    .service.warn { border-color: #665226; background: var(--warn-bg); }
+    .service.ok { border-color: #275d48; background: var(--ok-bg); }
+
+    .spark {
+      height: 48px;
+      display: flex;
+      align-items: end;
+      gap: 4px;
+      padding-top: 6px;
+    }
+
+    .spark i {
+      flex: 1;
+      height: var(--h);
+      min-width: 4px;
+      border-radius: 3px 3px 1px 1px;
+      background: var(--accent);
+      opacity: .85;
+      animation: rise .7s ease both;
+    }
+
+    .spark.bad i { background: var(--bad); }
+    .spark.warn i { background: var(--warn); }
+
+    .log-toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+
+    pre.log {
+      margin: 0;
+      min-height: 364px;
+      max-height: 470px;
+      overflow: auto;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #03070b;
+      color: #dce8f7;
+      line-height: 1.55;
+      font-size: .86rem;
+      white-space: pre-wrap;
+    }
+
+    .timeline { display: grid; gap: 8px; }
+
+    .timeline-item {
+      padding: 9px;
+      border-left: 3px solid var(--line-strong);
+      background: var(--panel-3);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .timeline-item.critical { border-left-color: var(--bad); }
+    .timeline-item.ok { border-left-color: var(--ok); }
+
+    ol.runbook {
+      margin: 0;
+      padding-left: 22px;
+      display: grid;
+      gap: 8px;
+    }
+
+    ol.runbook li {
+      padding: 8px 8px 8px 2px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    ol.runbook li:last-child { border-bottom: 0; }
+
+    textarea {
+      width: 100%;
+      min-height: 156px;
+      resize: vertical;
+      color: var(--ink);
+      background: #050a10;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+    }
+
+    th, td {
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { color: var(--muted); font-weight: 850; }
+
+    @keyframes urgent { 50% { box-shadow: 0 0 0 8px rgba(255,107,107,.04); } }
+    @keyframes rise { from { transform: scaleY(.25); opacity: .35; } }
+
+    @media (max-width: 1250px) {
+      .grid, .overview { grid-template-columns: 1fr; }
+      .topbar { position: static; grid-template-columns: 1fr; align-items: start; }
+      .filters, .actions { justify-content: flex-start; }
+      pre.log { max-height: none; }
+    }
+
+    @media (max-width: 720px) {
+      .ops { width: min(100% - 12px, 1600px); padding-top: 6px; }
+      .service-map, .log-toolbar { grid-template-columns: 1fr; }
+      .incident-head, .row, .timeline-item { grid-template-columns: 1fr; }
+      .metric { font-size: 1.65rem; }
+      h1 { font-size: 1.55rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+      button:hover, .button:hover, .incident:hover { transform: none; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    .library-chart-wrap {
+      min-height: 190px;
+      padding: 12px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background: rgba(255,255,255,.055);
+    }
+    .library-chart-wrap canvas { width: 100% !important; height: 170px !important; }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <main class="ops">
+    <header class="topbar" aria-label="VectorWatch command bar">
+      <a class="brand" href="../../index.html"><span class="mark">V</span>VectorWatch</a>
+      <div class="filters" aria-label="Incident filters">
+        <select aria-label="Time range"><option>Last 15m</option><option>Last 1h</option></select>
+        <select aria-label="Severity"><option>P1 + P2</option><option>P1 only</option><option>All severities</option></select>
+        <select aria-label="Region"><option>EU edge</option><option>Global</option><option>North America</option></select>
+        <input aria-label="Search logs and traces" value="trace:tr_fra_82H or service:edge-api">
+      </div>
+      <div class="actions">
+        <button>Acknowledge</button>
+        <button class="primary">Start rollback</button>
+        <button class="danger">Escalate P1</button>
+      </div>
+    </header>
+
+    <section class="overview" aria-label="System health overview">
+      <article class="summary panel">
+        <span class="status critical"><span class="dot critical"></span>P1 active - customer-visible</span>
+        <h1>EU edge latency breach with auth-token anomaly.</h1>
+        <p class="muted">Incident INC-2847 - service edge-api - region fra/eu-west - owner Maya Kapoor - age 14m 22s - impact 12% EU requests above SLO.</p>
+      </article>
+      <article class="metric-card"><span class="soft">SLO burn</span><div class="metric bad">4.8x</div><span class="status critical">critical</span></article>
+      <article class="metric-card"><span class="soft">p95 latency</span><div class="metric bad">842ms</div><span class="muted">target 180ms</span></article>
+      <article class="metric-card"><span class="soft">Errors/min</span><div class="metric warn">1,284</div><span class="muted">+38% 5m</span></article>
+      <article class="metric-card"><span class="soft">Events/min</span><div class="metric">238</div><span class="muted">batched live</span></article>
+      <article class="metric-card"><span class="soft">Rollback</span><div class="metric ok">Ready</div><span class="muted">rbk_91F2</span></article>
+    </section>
+
+    <section class="grid">
+      <aside class="left">
+        <section class="panel" id="incidents">
+          <h2>Incident queue</h2>
+          <div class="queue">
+            <article class="incident p1" tabindex="0">
+              <div class="incident-head"><span class="incident-title">[P1] fra edge-api p95 breach</span><span class="status critical">14m</span></div>
+              <div class="meta"><span>owner Maya</span><span>impact 12%</span><span>trace tr_fra_82H</span></div>
+              <div class="actions"><button>Open</button><button class="primary">Ack</button></div>
+            </article>
+            <article class="incident p1" tabindex="0">
+              <div class="incident-head"><span class="incident-title">[P1] auth token exchange spike</span><span class="status critical">9m</span></div>
+              <div class="meta"><span>owner Security</span><span>blocked 418</span><span>policy auth-rate</span></div>
+              <div class="actions"><button>Inspect</button><button>Escalate</button></div>
+            </article>
+            <article class="incident p2" tabindex="0">
+              <div class="incident-head"><span class="incident-title">[P2] billing worker lag</span><span class="status warn">22m</span></div>
+              <div class="meta"><span>owner Data</span><span>lag 12m</span><span>queue eu-billing</span></div>
+            </article>
+            <article class="incident p3" tabindex="0">
+              <div class="incident-head"><span class="incident-title">[P3] dashboard cache miss rise</span><span class="status">resolved</span></div>
+              <div class="meta"><span>owner Web</span><span>resolved 10:31</span><span>no customer impact</span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Escalation detail</h2>
+          <div class="rows">
+            <div class="row"><span>Incident commander</span><b>Maya K.</b></div>
+            <div class="row"><span>Security owner</span><b>Andre R.</b></div>
+            <div class="row"><span>Comms owner</span><b>Priya S.</b></div>
+            <div class="row"><span>Customer tier affected</span><b class="bad">Enterprise EU</b></div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="main">
+        <section class="panel" id="map">
+          <div class="chips" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">Service map</h2><span class="tag">dependency view - 10:42:31</span></div>
+          <div class="service-map" aria-label="Service dependency map">
+            <article class="service critical"><strong>edge-api</strong><span class="status critical">degraded</span><span class="soft">fra p95 842ms</span></article>
+            <article class="service critical"><strong>auth-gateway</strong><span class="status critical">blocked spike</span><span class="soft">418 token exchanges</span></article>
+            <article class="service warn"><strong>billing-worker</strong><span class="status warn">lagging</span><span class="soft">12m queue</span></article>
+            <article class="service ok"><strong>iad-router</strong><span class="status ok">healthy</span><span class="soft">drain target</span></article>
+            <article class="service ok"><strong>rollback-store</strong><span class="status ok">ready</span><span class="soft">rbk_91F2</span></article>
+            <article class="service"><strong>status-page</strong><span class="status">draft</span><span class="soft">Priya editing</span></article>
+          </div>
+        </section>
+
+        <section class="panel" id="logs">
+          <div class="log-toolbar">
+            <input aria-label="Filter log stream" value="level:error region:fra service:edge-api">
+            <button>Wrap lines</button>
+            <button>Copy trace</button>
+          </div>
+          <pre class="log mono" aria-label="Live incident log stream">10:42:18.084Z ERR edge-api fra p95=842ms slo=180ms trace=tr_fra_82H span=checkout.prepare
+10:42:19.411Z WRN auth-gateway eu-west token_exchange_rate=4.8x policy=auth-rate action=block client=acct_solace
+10:42:20.026Z INF rollback-store checkpoint=rbk_91F2 release=2026.06.27-184 status=verified owner=platform
+10:42:22.770Z ERR edge-api fra upstream_timeout route=/v2/checkout quote_id=q_59K owner=edge-oncall
+10:42:24.003Z INF operator maya.k acknowledged incident=INC-2847 severity=P1 channel=#inc-eu-edge
+10:42:25.612Z WRN billing-worker eu queue_lag=12m31s jobs=824 dependency=edge-api
+10:42:28.451Z ERR auth-gateway suspicious_token_exchange blocked=418 trace=tr_auth_41P rule=auth-rate
+10:42:31.906Z INF traffic-router drain_plan target=iad percent=20 status=pending_approval runbook=RB-EDGE-17
+10:42:34.118Z ERR edge-api fra p95=818ms error_budget_burn=4.8x customer_impact=12%</pre>
+        </section>
+      </section>
+
+      <aside class="right">
+        <section class="panel" id="runbook">
+          <div class="chips" style="justify-content:space-between"><h2 style="margin:0">Runbook RB-EDGE-17</h2><span class="status warn">step 2 waiting</span></div>
+          <ol class="runbook">
+            <li><strong class="ok">Done:</strong> Verify rollback checkpoint <span class="mono">rbk_91F2</span>.</li>
+            <li><strong class="warn">Now:</strong> Drain 20% fra traffic to iad and observe p95 for 5m.</li>
+            <li><strong>Next:</strong> Rotate auth rate-limit key if blocked exchanges continue.</li>
+            <li><strong>Then:</strong> Publish status-page update if impact remains above 8%.</li>
+          </ol>
+          <div class="actions" style="margin-top:10px;justify-content:flex-start"><button class="primary">Run drain step</button><button>Assign next</button></div>
+        </section>
+
+        <section class="panel" id="timeline">
+          <h2>Timeline</h2>
+          <div class="timeline">
+            <div class="timeline-item critical"><span>10:28 p95 breach detected</span><b class="bad">P1</b></div>
+            <div class="timeline-item"><span>10:31 cache P3 auto-resolved</span><b>info</b></div>
+            <div class="timeline-item critical"><span>10:34 auth anomaly correlated</span><b class="bad">P1</b></div>
+            <div class="timeline-item ok"><span>10:42 rollback verified</span><b class="ok">ready</b></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Live telemetry</h2>
+          <div class="rows">
+            <div><div class="row"><span>edge-api p95</span><b class="bad">842ms</b></div><div class="spark bad"><i style="--h:38%"></i><i style="--h:46%"></i><i style="--h:61%"></i><i style="--h:84%"></i><i style="--h:92%"></i><i style="--h:88%"></i></div></div>
+            <div><div class="row"><span>auth blocks/min</span><b class="warn">418</b></div><div class="spark warn"><i style="--h:24%"></i><i style="--h:28%"></i><i style="--h:56%"></i><i style="--h:78%"></i><i style="--h:71%"></i><i style="--h:64%"></i></div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Post-incident notes</h2>
+          <textarea aria-label="Post-incident notes">Initial impact: 12% of EU checkout requests above latency SLO. Rollback checkpoint verified. Customer comms draft should mention elevated latency, not data loss. Follow-up: auth spike correlation needs security review.</textarea>
+        </section>
+      </aside>
+    </section>
+  
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Incident decision rail with severity, owner, and next runbook step.</h2>
+        <p>Command Center must compress the operator question into one rail: what is broken, how bad, who owns it, and what should happen next.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="library-chart-wrap"><span class="artifact-pill">Chart.js powered</span><canvas class="library-chart" data-chart="line" data-label="Error budget burn" data-values="12,18,44,71,58,33" aria-label="Error budget burn chart"></canvas></div>
+        <div class="artifact-row"><span class="artifact-node">P1</span><div><strong>fra edge-api saturation</strong><span>12% EU requests above SLO</span></div><span class="artifact-pill">Critical</span></div>
+        <div class="artifact-row"><span class="artifact-node">R2</span><div><strong>Drain canary region</strong><span>Runbook step waiting for SRE owner</span></div><span class="artifact-pill">Next</span></div>
+        <div class="artifact-row"><span class="artifact-node">N3</span><div><strong>Customer comms draft</strong><span>Support handoff note prepared</span></div><span class="artifact-pill">Ready</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Incident response proof">
+      <div>
+        <span class="proof-label">Incident response proof</span>
+        <h2>A severity-first console for operators who need the next action immediately.</h2>
+        <p>VectorWatch reads as a live incident room with health, affected services, logs, runbook steps, escalation owners, and post-incident notes tied to one operational event.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>P1</strong><span>checkout latency incident isolated to eu-west</span></div>
+        <div class="client-proof-kpi"><strong>7.4k rpm</strong><span>traffic under active mitigation</span></div>
+        <div class="client-proof-kpi"><strong>03:18</strong><span>time since acknowledgement</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>The design separates telemetry, ownership, runbook execution, and communication so urgency stays scannable.</span></div>
+      </div>
+    </section></main>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+  <script type="module">
+    import { Chart, LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend } from "../../node_modules/chart.js/dist/chart.js";
+    Chart.register(LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend);
+    const canvas = document.querySelector(".library-chart");
+    if (canvas) {
+      const mode = canvas.dataset.chart || "line";
+      const grid = "rgba(148,163,184,.22)";
+      const ink = getComputedStyle(document.body).color || "#dbeafe";
+      new Chart(canvas, {
+        type: mode === "bar" ? "bar" : "line",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+          datasets: [{
+            label: canvas.dataset.label || "Product signal",
+            data: (canvas.dataset.values || "42,58,51,74,88,69").split(",").map(Number),
+            borderColor: "#67e8f9",
+            backgroundColor: mode === "bar" ? "rgba(103,232,249,.45)" : "rgba(103,232,249,.16)",
+            pointBackgroundColor: "#8b5cf6",
+            tension: .38,
+            fill: mode !== "bar",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { color: grid }, ticks: { color: ink } },
+            y: { grid: { color: grid }, ticks: { color: ink }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

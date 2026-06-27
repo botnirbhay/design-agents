@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrismLedger - Glass Motion Revenue Intelligence</title>
+  <style>
+    :root {
+      --bg-0: #06111e;
+      --bg-1: #0d2335;
+      --bg-2: #16291f;
+      --glass: rgba(255, 255, 255, .13);
+      --glass-strong: rgba(255, 255, 255, .18);
+      --well: rgba(5, 16, 29, .64);
+      --well-2: rgba(10, 25, 42, .78);
+      --ink: #f6fbff;
+      --muted: #c4d2dc;
+      --soft: #93a8b6;
+      --line: rgba(255, 255, 255, .24);
+      --line-strong: rgba(255, 255, 255, .42);
+      --accent: #75dcff;
+      --accent-2: #a77cff;
+      --ok: #7dffc0;
+      --warn: #ffd36a;
+      --bad: #ff8f9a;
+      --focus: #e0f6ff;
+      --shadow: 0 28px 90px rgba(0, 0, 0, .34);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 4%, rgba(117, 220, 255, .34), transparent 27%),
+        radial-gradient(circle at 82% 0%, rgba(167, 124, 255, .32), transparent 24%),
+        radial-gradient(circle at 76% 70%, rgba(125, 255, 192, .16), transparent 30%),
+        linear-gradient(135deg, var(--bg-0), var(--bg-1) 48%, var(--bg-2));
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(115deg, transparent 0 30%, rgba(255, 255, 255, .055) 42%, transparent 54%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .06), transparent 42%);
+      opacity: .7;
+    }
+
+    a, button, input, select { font: inherit; }
+    a { color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    button, .button, input, select {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    button, .button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 12px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, .1);
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    button:hover, .button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: rgba(255, 255, 255, .17);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, .2);
+    }
+
+    button:active, .button:active { transform: translateY(0) scale(.99); }
+
+    .primary {
+      border-color: transparent;
+      color: #06111e;
+      background: linear-gradient(135deg, var(--accent), #d6f6ff);
+      font-weight: 850;
+    }
+
+    .ghost { background: rgba(255, 255, 255, .06); }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1440px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 48px;
+    }
+
+    .glass {
+      border: 1px solid var(--line);
+      background: var(--glass);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-radius: var(--radius);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 12px;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 10px;
+      margin-bottom: 14px;
+      background: rgba(8, 20, 35, .62);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #06111e;
+      background: linear-gradient(135deg, var(--accent), var(--ok));
+      box-shadow: 0 16px 46px rgba(117, 220, 255, .28);
+    }
+
+    .nav, .actions, .filters, .chips {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .nav { justify-content: center; }
+
+    .nav a {
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .nav a:hover {
+      color: var(--ink);
+      background: rgba(255, 255, 255, .1);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 264px minmax(0, 1fr) 332px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--glass);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .side, .inspector {
+      position: sticky;
+      top: 86px;
+    }
+
+    .main {
+      display: grid;
+      gap: 14px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 780px;
+      margin-bottom: 12px;
+      font-size: clamp(2.35rem, 5.5vw, 5.8rem);
+      line-height: .92;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: clamp(1.3rem, 2vw, 2rem);
+      line-height: 1.05;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .lead {
+      max-width: 720px;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 1.04rem;
+    }
+
+    .muted { color: var(--muted); }
+    .soft { color: var(--soft); }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    .eyebrow, .tag, .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      width: max-content;
+      max-width: 100%;
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, .08);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--ok);
+      box-shadow: 0 0 0 5px rgba(125, 255, 192, .14);
+      flex: none;
+    }
+
+    .hero {
+      min-height: 430px;
+      padding: 22px;
+      overflow: hidden;
+      position: relative;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .08)),
+        rgba(8, 20, 35, .54);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      top: -110px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(117, 220, 255, .22), transparent 66%);
+      pointer-events: none;
+    }
+
+    .filterbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 12px;
+      margin-top: 22px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: var(--radius);
+      background: rgba(4, 14, 26, .62);
+    }
+
+    select, input {
+      min-height: 38px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: rgba(5, 16, 29, .78);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .kpi {
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: var(--radius);
+      background: rgba(5, 16, 29, .58);
+    }
+
+    .metric {
+      margin: 8px 0 6px;
+      font-size: clamp(1.75rem, 3vw, 2.7rem);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .well {
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: var(--radius);
+      background: var(--well);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+    }
+
+    .chart-card {
+      padding: 18px;
+      background: rgba(8, 20, 35, .52);
+    }
+
+    .chart-head, .card-head, .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chart {
+      height: 280px;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .bars {
+      height: 100%;
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      padding: 18px 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .18);
+      background:
+        linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px) 0 20% / 100% 25%,
+        linear-gradient(90deg, transparent, rgba(117, 220, 255, .08), transparent);
+    }
+
+    .bar {
+      flex: 1;
+      min-width: 16px;
+      height: var(--h);
+      border-radius: 8px 8px 2px 2px;
+      background: linear-gradient(180deg, var(--accent), rgba(117, 220, 255, .25));
+      box-shadow: 0 12px 34px rgba(117, 220, 255, .2);
+      transform-origin: bottom;
+      animation: rise .9s ease both;
+    }
+
+    .bar.forecast {
+      background: linear-gradient(180deg, var(--accent-2), rgba(167, 124, 255, .24));
+      box-shadow: 0 12px 34px rgba(167, 124, 255, .2);
+    }
+
+    .axis {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      color: var(--soft);
+      font-size: .78rem;
+      text-align: center;
+    }
+
+    .grid2, .grid3 {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid2 { grid-template-columns: 1fr 1fr; }
+    .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .105);
+      box-shadow: 0 18px 55px rgba(0, 0, 0, .18);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+      background: rgba(255, 255, 255, .14);
+    }
+
+    .rows { display: grid; gap: 8px; }
+
+    .row {
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: var(--radius);
+      background: var(--well);
+    }
+
+    .row b { white-space: nowrap; }
+
+    .account {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: var(--radius);
+      background: rgba(5, 16, 29, .58);
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #06111e;
+      background: linear-gradient(135deg, var(--accent), var(--ok));
+      font-size: .82rem;
+      font-weight: 900;
+    }
+
+    .alert { border-left: 3px solid var(--warn); }
+    .alert.critical { border-left-color: var(--bad); }
+    .alert.good { border-left-color: var(--ok); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .92rem;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, .14);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .activity { display: grid; gap: 10px; }
+
+    .event {
+      display: grid;
+      grid-template-columns: 66px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border-radius: var(--radius);
+      background: rgba(5, 16, 29, .48);
+    }
+
+    .forecast { position: relative; overflow: hidden; }
+
+    .forecast::before {
+      content: "";
+      position: absolute;
+      inset: auto -20% -58% 20%;
+      height: 190px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(125, 255, 192, .2), transparent 65%);
+      pointer-events: none;
+    }
+
+    .progress {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .12);
+    }
+
+    .progress span {
+      display: block;
+      width: var(--w);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--ok));
+      animation: fill 1.1s ease both;
+    }
+
+    @keyframes rise { from { transform: scaleY(.25); opacity: .4; } }
+    @keyframes fill { from { width: 0; } }
+    @keyframes drift { 50% { transform: translateY(-6px); } }
+    .float { animation: drift 5s ease-in-out infinite; }
+
+    @supports not ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+      .glass, .panel, .card { background: rgba(12, 29, 47, .94); }
+    }
+
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 1fr; }
+      .side, .inspector { position: static; }
+      .topbar { position: static; grid-template-columns: 1fr; }
+      .nav { justify-content: flex-start; }
+    }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 20px, 1440px); padding-top: 10px; }
+      .hero { padding: 16px; min-height: 0; }
+      .filterbar, .chart-head, .card-head { align-items: flex-start; flex-direction: column; }
+      .kpis, .grid2, .grid3 { grid-template-columns: 1fr; }
+      .chart { height: 230px; }
+      .bars { gap: 7px; padding-inline: 8px; }
+      .event { grid-template-columns: 1fr; }
+      h1 { font-size: clamp(2.25rem, 13vw, 4rem); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+      button:hover, .button:hover, .card:hover { transform: none; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    .library-chart-wrap {
+      min-height: 190px;
+      padding: 12px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background: rgba(255,255,255,.055);
+    }
+    .library-chart-wrap canvas { width: 100% !important; height: 170px !important; }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar glass" aria-label="PrismLedger navigation">
+      <a class="brand" href="../../index.html"><span class="mark">P</span>PrismLedger</a>
+      <div class="nav">
+        <a href="#portfolio">Portfolio</a>
+        <a href="#forecast">Forecast</a>
+        <a href="#alerts">Alerts</a>
+        <a href="#activity">Activity</a>
+      </div>
+      <div class="actions">
+        <button class="ghost">Share board</button>
+        <button class="primary">Export forecast</button>
+      </div>
+    </nav>
+
+    <section class="layout" aria-label="Revenue intelligence workspace">
+      <aside class="panel side" aria-label="Portfolio and account context">
+        <span class="eyebrow"><span class="dot"></span>Board live - 2m fresh</span>
+        <h2>Portfolio context</h2>
+        <div class="rows">
+          <div class="account"><span class="avatar">SH</span><div><strong>Solace Health</strong><br><span class="soft">Renewal - 41 days</span></div><b class="warn">$840K</b></div>
+          <div class="account"><span class="avatar">AR</span><div><strong>Arden Retail</strong><br><span class="soft">Expansion - legal review</span></div><b class="ok">$1.2M</b></div>
+          <div class="account"><span class="avatar">NV</span><div><strong>NovaGrid</strong><br><span class="soft">Risk - support backlog</span></div><b class="bad">P1</b></div>
+        </div>
+
+        <h3 style="margin-top:18px">Team presence</h3>
+        <div class="chips"><span class="tag">MK reviewing</span><span class="tag">AR online</span><span class="tag">Finance synced</span></div>
+      </aside>
+
+      <section class="main">
+        <section id="portfolio" class="hero glass">
+          <span class="eyebrow"><span class="dot"></span>Revenue intelligence - Enterprise segment</span>
+          <h1>Forecast changes you can audit before the board sees them.</h1>
+          <p class="lead">PrismLedger blends CRM, billing, support, and finance data into a readable glass workspace with clear filters, confidence, risk alerts, and export-ready forecast explanations.</p>
+
+          <div class="filterbar">
+            <div class="filters" aria-label="Dashboard filters">
+              <select aria-label="Quarter"><option>Q3 FY26</option><option>Q4 FY26</option></select>
+              <select aria-label="Segment"><option>Enterprise</option><option>Mid-market</option><option>Strategic</option></select>
+              <select aria-label="Region"><option>Global regions</option><option>North America</option><option>EMEA</option></select>
+            </div>
+            <div class="actions"><button>Refresh sources</button><button class="primary">Run forecast</button></div>
+          </div>
+
+          <div class="kpis" aria-label="Key revenue metrics">
+            <article class="kpi"><span class="soft">Committed ARR</span><div class="metric">$8.42M</div><span class="status ok">+11.8% vs plan</span></article>
+            <article class="kpi"><span class="soft">At-risk renewal</span><div class="metric warn">$1.16M</div><span class="status warn">14 accounts</span></article>
+            <article class="kpi"><span class="soft">Forecast confidence</span><div class="metric ok">91%</div><span class="status">6 sources verified</span></article>
+            <article class="kpi"><span class="soft">Sync health</span><div class="metric bad">18m</div><span class="status bad">ERP delayed</span></article>
+          </div>
+        </section>
+
+        <section class="grid2">
+          <article class="chart-card glass" aria-labelledby="chart-title">
+            <div class="chart-head"><div><h2 id="chart-title">Actuals vs forecast</h2><p class="muted">Weighted ARR by week, with model lift from account signals.</p></div><span class="tag">Model v4.8 - 10:42</span></div>
+            <div class="chart well" role="img" aria-label="Seven week chart comparing actual and forecast revenue">
+              <div class="bars"><i class="bar" style="--h:42%"></i><i class="bar" style="--h:56%"></i><i class="bar" style="--h:51%"></i><i class="bar" style="--h:68%"></i><i class="bar forecast" style="--h:82%"></i><i class="bar forecast" style="--h:76%"></i><i class="bar forecast" style="--h:91%"></i></div>
+              <div class="axis"><span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span><span>W7</span></div>
+            </div>
+          </article>
+
+          <article id="forecast" class="card forecast">
+            <div class="card-head"><div><h2>Forecast explanation</h2><p class="muted">Top drivers behind the $620K upward revision.</p></div><span class="status ok">91% confidence</span></div>
+            <div class="rows"><div class="row"><span>Arden Retail expansion moved to procurement</span><b class="ok">+$410K</b></div><div class="row"><span>NovaGrid support backlog increases churn pressure</span><b class="bad">-$190K</b></div><div class="row"><span>EMEA services attach rate improved</span><b class="ok">+$280K</b></div></div>
+            <h3 style="margin-top:16px">Source coverage</h3>
+            <div class="progress" aria-label="Source coverage 86 percent"><span style="--w:86%"></span></div>
+            <p class="soft" style="margin-top:8px">CRM, billing, support, calendar, and ERP included. ERP is 18 minutes behind.</p>
+          </article>
+        </section>
+
+        <section class="grid3" aria-label="Insight cards">
+          <article class="card"><span class="tag">Insight - support</span><h3>Support backlog predicts $190K renewal pressure.</h3><p class="muted">34 unresolved tickets across three strategic accounts; source confidence 88%.</p></article>
+          <article class="card"><span class="tag">Insight - calendar</span><h3>Executive sponsor meetings increased conversion odds.</h3><p class="muted">Five VP-level meetings scheduled before procurement cutoff.</p></article>
+          <article class="card"><span class="tag">Insight - billing</span><h3>Usage tiers are tracking 7% above contracted plan.</h3><p class="muted">Finance recommends moving expansion probability from 61% to 74%.</p></article>
+        </section>
+
+        <section class="grid2">
+          <article class="card" aria-labelledby="comparison-title">
+            <h2 id="comparison-title">Segment comparison</h2>
+            <table><thead><tr><th>Segment</th><th>Actual</th><th>Forecast</th><th>Variance</th></tr></thead><tbody><tr><td>Enterprise</td><td>$4.82M</td><td class="ok">$5.44M</td><td class="ok">+12.9%</td></tr><tr><td>Strategic</td><td>$2.10M</td><td>$2.06M</td><td class="warn">-1.9%</td></tr><tr><td>Mid-market</td><td>$1.50M</td><td class="ok">$1.62M</td><td class="ok">+8.0%</td></tr></tbody></table>
+          </article>
+
+          <article id="activity" class="card">
+            <div class="card-head"><h2>Recent activity</h2><button>Open audit</button></div>
+            <div class="activity"><div class="event"><span class="soft mono">10:42</span><span>Model explained Q3 variance and attached six source references.</span></div><div class="event"><span class="soft mono">10:18</span><span>Maya pinned NovaGrid support risk to board review.</span></div><div class="event"><span class="soft mono">09:57</span><span>Finance sync completed for billing actuals through W4.</span></div></div>
+          </article>
+        </section>
+      </section>
+
+      <aside id="alerts" class="panel inspector" aria-label="Alerts and actions">
+        <div class="card-head"><h2>Alert inspector</h2><span class="status bad">3 active</span></div>
+        <div class="rows">
+          <article class="row alert critical"><span><strong>ERP sync delayed</strong><br><span class="soft">Finance source - 18m stale</span></span><b class="bad">P1</b></article>
+          <article class="row alert"><span><strong>Solace renewal slipped</strong><br><span class="soft">Owner Lena - 41 days left</span></span><b class="warn">$840K</b></article>
+          <article class="row alert good"><span><strong>Arden expansion advanced</strong><br><span class="soft">Procurement stage updated</span></span><b class="ok">+18%</b></article>
+        </div>
+
+        <h3 style="margin-top:18px">Operator actions</h3>
+        <div class="rows"><button class="primary">Notify finance owner</button><button>Assign renewal review</button><button class="ghost">Dismiss low-risk alerts</button></div>
+
+        <h3 style="margin-top:18px">Board packet status</h3>
+        <div class="rows"><div class="row"><span>Forecast memo</span><b class="ok">Ready</b></div><div class="row"><span>Risk appendix</span><b class="warn">Review</b></div><div class="row"><span>Source audit</span><b>12 pages</b></div></div>
+      </aside>
+    </section>
+  
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Glass forecast inspector with source confidence in solid wells.</h2>
+        <p>The premium material only works when the business data remains sharper than the atmosphere: forecast, source freshness, owner, and alert all stay readable.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="library-chart-wrap"><span class="artifact-pill">Chart.js powered</span><canvas class="library-chart" data-chart="line" data-label="Weighted renewal confidence" data-values="61,64,68,74,82,91" aria-label="Weighted renewal confidence chart"></canvas></div>
+        <div class="artifact-row"><span class="artifact-node">F1</span><div><strong>Renewal forecast</strong><span>$18.4M weighted ARR with 91% confidence</span></div><span class="artifact-pill">Forecast</span></div>
+        <div class="artifact-row"><span class="artifact-node">F2</span><div><strong>ERP sync delay</strong><span>Finance source is 18 minutes stale</span></div><span class="artifact-pill">Alert</span></div>
+        <div class="artifact-row"><span class="artifact-node">F3</span><div><strong>Owner handoff</strong><span>Lena owns Solace renewal risk</span></div><span class="artifact-pill">Owner</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Revenue intelligence proof">
+      <div>
+        <span class="proof-label">Revenue intelligence proof</span>
+        <h2>Premium glass treatment with readable business data in the foreground.</h2>
+        <p>PrismLedger uses translucent depth around a practical revenue workflow: segment filters, forecast confidence, alert ownership, comparison rows, and recent account activity.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>$18.4M</strong><span>weighted renewal pipeline in current view</span></div>
+        <div class="client-proof-kpi"><strong>91%</strong><span>forecast confidence with source freshness</span></div>
+        <div class="client-proof-kpi"><strong>4 alerts</strong><span>owned, timestamped, and actionable</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>Glass is used as hierarchy and atmosphere, while dense charts and rows sit in clearer wells.</span></div>
+      </div>
+    </section></main>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+  <script type="module">
+    import { Chart, LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend } from "../../node_modules/chart.js/dist/chart.js";
+    Chart.register(LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend);
+    const canvas = document.querySelector(".library-chart");
+    if (canvas) {
+      const mode = canvas.dataset.chart || "line";
+      const grid = "rgba(148,163,184,.22)";
+      const ink = getComputedStyle(document.body).color || "#dbeafe";
+      new Chart(canvas, {
+        type: mode === "bar" ? "bar" : "line",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+          datasets: [{
+            label: canvas.dataset.label || "Product signal",
+            data: (canvas.dataset.values || "42,58,51,74,88,69").split(",").map(Number),
+            borderColor: "#67e8f9",
+            backgroundColor: mode === "bar" ? "rgba(103,232,249,.45)" : "rgba(103,232,249,.16)",
+            pointBackgroundColor: "#8b5cf6",
+            tension: .38,
+            fill: mode !== "bar",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { color: grid }, ticks: { color: ink } },
+            y: { grid: { color: grid }, ticks: { color: ink }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StrataOps - Spatial 3D Product System</title>
+  <style>
+    :root {
+      --bg: #eef4fb;
+      --bg-2: #f8fbff;
+      --panel: rgba(255, 255, 255, .92);
+      --panel-2: #f3f7fc;
+      --ink: #172235;
+      --muted: #637084;
+      --soft: #8190a3;
+      --line: #d7e1ee;
+      --line-strong: #aebed2;
+      --accent: #335cff;
+      --accent-2: #17a38c;
+      --violet: #7f5cff;
+      --ok: #087f5b;
+      --warn: #a45b00;
+      --bad: #b42318;
+      --focus: #7e9dff;
+      --shadow: 0 24px 70px rgba(36, 54, 86, .14);
+      --shadow-deep: 0 38px 100px rgba(36, 54, 86, .2);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 0%, rgba(51, 92, 255, .16), transparent 30%),
+        radial-gradient(circle at 84% 6%, rgba(23, 163, 140, .13), transparent 28%),
+        linear-gradient(180deg, var(--bg-2), var(--bg) 58%, #e7eef7);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(36, 54, 86, .045) 1px, transparent 1px) 0 0 / 74px 74px,
+        linear-gradient(180deg, rgba(36, 54, 86, .035) 1px, transparent 1px) 0 0 / 74px 74px;
+      mask-image: linear-gradient(180deg, black, transparent 80%);
+    }
+
+    a, button { font: inherit; }
+    a { color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    button, .button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: var(--panel);
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    button:hover, .button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      box-shadow: 0 14px 34px rgba(36, 54, 86, .12);
+      background: #fff;
+    }
+
+    button:active, .button:active { transform: translateY(0) scale(.99); }
+
+    .primary {
+      border-color: transparent;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      font-weight: 850;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1320px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 54px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      box-shadow: 0 16px 40px rgba(51, 92, 255, .24);
+    }
+
+    .nav, .actions, .chips {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .nav a {
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .nav a:hover { color: var(--ink); background: rgba(255,255,255,.72); }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 760px;
+      margin: 14px 0 16px;
+      font-size: clamp(2.8rem, 7vw, 7rem);
+      line-height: .88;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: clamp(1.55rem, 3vw, 3.2rem);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+
+    h3 { margin-bottom: 8px; font-size: 1rem; line-height: 1.2; }
+
+    .lead {
+      max-width: 700px;
+      color: var(--muted);
+      font-size: 1.06rem;
+      line-height: 1.65;
+    }
+
+    .muted { color: var(--muted); }
+    .soft { color: var(--soft); }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    .eyebrow, .tag, .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      width: max-content;
+      max-width: 100%;
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #4f5f75;
+      background: rgba(255,255,255,.7);
+      font-size: .82rem;
+      font-weight: 850;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--ok);
+      box-shadow: 0 0 0 5px rgba(8, 127, 91, .13);
+      flex: none;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: .82fr 1.18fr;
+      gap: 26px;
+      align-items: center;
+      min-height: 690px;
+    }
+
+    .hero-copy { position: relative; z-index: 2; }
+
+    .control-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.68);
+      box-shadow: 0 14px 40px rgba(36, 54, 86, .08);
+    }
+
+    .space-scene {
+      position: relative;
+      min-height: 620px;
+      perspective: 1200px;
+      overflow: visible;
+    }
+
+    .depth-shadow {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      bottom: 6%;
+      height: 28%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(36,54,86,.2), transparent 68%);
+      filter: blur(10px);
+      transform: rotateX(60deg);
+    }
+
+    .orbit-stack {
+      position: absolute;
+      inset: 6% 2% 4% 2%;
+      transform-style: preserve-3d;
+      transform: rotateX(58deg) rotateZ(-13deg);
+    }
+
+    .plane {
+      position: absolute;
+      width: 72%;
+      min-height: 196px;
+      padding: 16px;
+      border: 1px solid rgba(160, 176, 200, .55);
+      border-radius: 12px;
+      background: rgba(255,255,255,.9);
+      box-shadow: var(--shadow-deep);
+      transform-style: preserve-3d;
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+
+    .plane:hover {
+      border-color: var(--accent);
+      box-shadow: 0 42px 120px rgba(51,92,255,.18);
+    }
+
+    .plane-roadmap { left: 0; top: 2%; transform: translateZ(0); }
+    .plane-architecture { left: 18%; top: 28%; transform: translateZ(72px); background: #f7fbff; }
+    .plane-customer { left: 4%; top: 58%; transform: translateZ(144px); background: #fff; }
+
+    .plane-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .plane-title { font-size: 1.18rem; font-weight: 900; }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .mini-card, .row, .node, .metric-card, .feature-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+    }
+
+    .mini-card { padding: 10px; min-height: 82px; display: grid; align-content: space-between; }
+
+    .node-map {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .node { padding: 10px; text-align: center; font-weight: 850; }
+    .node.warn { background: #fff6e5; border-color: #f3d49b; }
+    .node.ok { background: #eafaf4; border-color: #b8ead7; }
+
+    .callout {
+      position: absolute;
+      right: 0;
+      top: 4%;
+      width: 210px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.92);
+      box-shadow: var(--shadow);
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .section { margin-top: 18px; }
+
+    .grid2, .grid3, .grid4 {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid2 { grid-template-columns: 1fr 1fr; }
+    .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .card, .metric-card, .feature-card {
+      padding: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .tilt:hover {
+      transform: perspective(900px) rotateX(2deg) rotateY(-3deg) translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 28px 80px rgba(51,92,255,.14);
+    }
+
+    .rows { display: grid; gap: 8px; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .metric {
+      margin: 8px 0;
+      font-size: clamp(2rem, 4vw, 4rem);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .architecture {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(246,250,255,.86));
+      box-shadow: var(--shadow);
+    }
+
+    .arch-map {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .arch-node {
+      min-height: 120px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .connector {
+      position: relative;
+    }
+
+    .connector::after {
+      content: "";
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      width: 10px;
+      height: 1px;
+      background: var(--line-strong);
+    }
+
+    .integrations .tag { background: white; }
+
+    .cta {
+      margin-top: 18px;
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(51,92,255,.12), transparent 42%),
+        rgba(255,255,255,.86);
+      box-shadow: var(--shadow);
+    }
+
+    @keyframes float { 50% { transform: translateY(-8px); } }
+
+    @media (max-width: 1080px) {
+      .topbar { grid-template-columns: 1fr; align-items: start; }
+      .nav { justify-content: flex-start; }
+      .hero { grid-template-columns: 1fr; min-height: 0; }
+      .space-scene { min-height: 590px; }
+      .callout { right: 2%; }
+      .arch-map { grid-template-columns: 1fr 1fr; }
+      .connector::after { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 20px, 1320px); padding-top: 12px; }
+      .space-scene { min-height: 0; perspective: none; }
+      .orbit-stack { position: relative; inset: auto; transform: none; display: grid; gap: 12px; }
+      .plane { position: relative; left: auto; top: auto; width: 100%; transform: none; min-height: 0; }
+      .plane:hover { transform: none; }
+      .callout { position: relative; width: 100%; right: auto; top: auto; margin-top: 12px; animation: none; }
+      .depth-shadow { display: none; }
+      .grid2, .grid3, .grid4, .mini-grid, .node-map, .arch-map { grid-template-columns: 1fr; }
+      h1 { font-size: clamp(2.45rem, 14vw, 4.8rem); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+
+      button:hover, .button:hover, .tilt:hover {
+        transform: none;
+      }
+
+      .orbit-stack, .plane {
+        transform: none !important;
+        position: relative;
+        left: auto;
+        top: auto;
+      }
+
+      .orbit-stack { display: grid; gap: 12px; }
+      .plane { width: 100%; }
+      .space-scene { min-height: 0; perspective: none; }
+      .depth-shadow { display: none; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    .three-proof {
+      min-height: 240px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 0%, rgba(103,232,249,.18), transparent 58%), rgba(255,255,255,.05);
+    }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar" aria-label="StrataOps navigation">
+      <a class="brand" href="../../index.html"><span class="mark">S</span>StrataOps</a>
+      <div class="nav">
+        <a href="#layers">Layers</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#metrics">Metrics</a>
+        <a href="#cta">Inspect</a>
+      </div>
+      <div class="actions">
+        <button>Flatten view</button>
+        <button class="primary">Share orbit</button>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <section class="hero-copy">
+        <span class="eyebrow"><span class="dot"></span>Spatial operations planning</span>
+        <h1>See the release from every layer before it moves.</h1>
+        <p class="lead">StrataOps gives product, platform, and customer teams a spatial model of roadmap commitments, system dependencies, and account impact without requiring heavy 3D or hidden controls.</p>
+        <div class="control-strip" aria-label="Stable spatial controls">
+          <button>Focus roadmap</button>
+          <button>Focus system</button>
+          <button>Focus customer</button>
+          <button class="primary">Preview launch orbit</button>
+        </div>
+      </section>
+
+      <section class="space-scene" aria-label="Layered 3D release model">
+        <div class="depth-shadow" aria-hidden="true"></div>
+        <div class="orbit-stack">
+          <article class="plane plane-roadmap" tabindex="0" aria-label="Roadmap layer with release milestones">
+            <div class="plane-head"><span class="plane-title">Roadmap layer</span><span class="status ok">8/9 aligned</span></div>
+            <div class="mini-grid">
+              <div class="mini-card"><span class="tag">Beta</span><strong>Mobile offline</strong><span class="soft">Owner Maya</span></div>
+              <div class="mini-card"><span class="tag warn">Gate</span><strong>Pricing review</strong><span class="soft">Due Thu</span></div>
+              <div class="mini-card"><span class="tag">Launch</span><strong>EU pilot</strong><span class="soft">Jul 18</span></div>
+            </div>
+          </article>
+
+          <article class="plane plane-architecture" tabindex="0" aria-label="Architecture layer with service health">
+            <div class="plane-head"><span class="plane-title">Architecture layer</span><span class="status warn">2 risks</span></div>
+            <div class="node-map">
+              <div class="node ok">API<br><span class="soft">healthy</span></div>
+              <div class="node warn">Sync<br><span class="soft">lag 12m</span></div>
+              <div class="node ok">Auth<br><span class="soft">ready</span></div>
+              <div class="node">Billing<br><span class="soft">review</span></div>
+              <div class="node ok">Search<br><span class="soft">ready</span></div>
+              <div class="node warn">EU data<br><span class="soft">DPA</span></div>
+            </div>
+          </article>
+
+          <article class="plane plane-customer" tabindex="0" aria-label="Customer layer with account impact">
+            <div class="plane-head"><span class="plane-title">Customer layer</span><span class="status">14 accounts</span></div>
+            <div class="rows">
+              <div class="row"><span>Solace Health pilot dependency</span><b class="warn">Legal</b></div>
+              <div class="row"><span>Arden Retail expansion path</span><b class="ok">Ready</b></div>
+              <div class="row"><span>NovaGrid support risk</span><b class="bad">P1</b></div>
+            </div>
+          </article>
+        </div>
+        <aside class="callout">
+          <span class="tag">Current focus</span>
+          <h3>Dependency height shows release risk.</h3>
+          <p class="muted">Higher planes are closer to customer impact. Controls stay flat and reachable.</p>
+        </aside>
+      </section>
+    </header>
+
+    <section id="layers" class="grid3 section" aria-label="Feature layers">
+      <article class="feature-card tilt"><span class="tag">Workflow preview</span><h2>Align work without flattening context.</h2><p class="muted">Roadmap items carry owner, due date, risk, and launch gate metadata into the spatial release model.</p></article>
+      <article class="feature-card tilt"><span class="tag">Perspective cards</span><h2>Inspect one layer while keeping the rest visible.</h2><p class="muted">Light tilt and depth cues help teams understand dependency proximity without making text hard to read.</p></article>
+      <article class="feature-card tilt"><span class="tag">Stable controls</span><h2>Navigate depth from normal UI.</h2><p class="muted">Flatten, focus, share, and preview controls stay outside the moving composition for keyboard and touch users.</p></article>
+    </section>
+
+    <section id="architecture" class="architecture section" aria-labelledby="architecture-title">
+      <div class="chips"><span class="eyebrow"><span class="dot"></span>System layer - 4m fresh</span></div>
+      <h2 id="architecture-title">A spatial model backed by real architecture metadata.</h2>
+      <p class="lead">The architecture layer maps services, regions, and policy gates to roadmap and customer commitments so depth explains why a dependency matters.</p>
+      <div class="arch-map">
+        <div class="arch-node connector"><span class="tag">Roadmap</span><strong>Mobile offline</strong><span class="soft">release train R-42</span></div>
+        <div class="arch-node connector"><span class="tag warn">Policy</span><strong>DPA gate</strong><span class="soft">owner Legal</span></div>
+        <div class="arch-node connector"><span class="tag">Service</span><strong>Sync worker</strong><span class="soft">12m lag</span></div>
+        <div class="arch-node connector"><span class="tag ok">Region</span><strong>EU pilot</strong><span class="soft">canary ready</span></div>
+        <div class="arch-node"><span class="tag">Account</span><strong>Solace Health</strong><span class="soft">renewal impact</span></div>
+      </div>
+    </section>
+
+    <section id="metrics" class="grid4 section" aria-label="Release metrics">
+      <article class="metric-card"><span class="tag">Alignment</span><div class="metric">8/9</div><p class="muted">release layers aligned</p></article>
+      <article class="metric-card"><span class="tag warn">Risk</span><div class="metric warn">3</div><p class="muted">unowned dependencies</p></article>
+      <article class="metric-card"><span class="tag ok">Confidence</span><div class="metric ok">91%</div><p class="muted">architecture coverage</p></article>
+      <article class="metric-card"><span class="tag">Impact</span><div class="metric">$2.4M</div><p class="muted">customer commitments visible</p></article>
+    </section>
+
+    <section class="grid2 section">
+      <article class="card">
+        <h2>Workflow preview</h2>
+        <div class="rows">
+          <div class="row"><span>Roadmap item enters orbit</span><b>09:12</b></div>
+          <div class="row"><span>Architecture gate attaches service risk</span><b class="warn">12m lag</b></div>
+          <div class="row"><span>Customer layer raises renewal impact</span><b class="bad">P1</b></div>
+          <div class="row"><span>Owner accepts mitigation path</span><b class="ok">Ready</b></div>
+        </div>
+      </article>
+      <article class="card integrations">
+        <h2>Integrations</h2>
+        <p class="muted">Each source becomes a layer, not a disconnected import.</p>
+        <div class="chips"><span class="tag">Linear</span><span class="tag">GitHub</span><span class="tag">Datadog</span><span class="tag">Salesforce</span><span class="tag">Figma</span><span class="tag">Snowflake</span></div>
+      </article>
+    </section>
+
+    <section id="cta" class="cta">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Static fallback included</span>
+        <h2>Inspect the next release without losing the shape of the system.</h2>
+        <p class="lead" style="margin-left:auto;margin-right:auto">Use CSS depth for the overview, flat controls for action, and readable metadata for every product layer.</p>
+        <div class="chips" style="justify-content:center"><a class="button primary" href="../../index.html">Return to demo index</a><button>Build an orbit</button></div>
+      </div>
+    </section>
+  
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Layer manifest that maps depth to actual product objects.</h2>
+        <p>Spatial 3D becomes credible when each plane represents a real layer: roadmap, risk, customers, regions, architecture, or integrations.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="three-proof" aria-label="Interactive layered product model"><span class="artifact-pill">Three.js layered model</span></div>
+        <div class="artifact-row"><span class="artifact-node">L1</span><div><strong>Risk layer</strong><span>12 dependencies with owner and confidence</span></div><span class="artifact-pill">Risk</span></div>
+        <div class="artifact-row"><span class="artifact-node">L2</span><div><strong>Customer layer</strong><span>$2.4M commitments visible by account</span></div><span class="artifact-pill">Customer</span></div>
+        <div class="artifact-row"><span class="artifact-node">L3</span><div><strong>Architecture layer</strong><span>Region and integration health stay inspectable</span></div><span class="artifact-pill">System</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Layered model proof">
+      <div>
+        <span class="proof-label">Layered model proof</span>
+        <h2>Depth explains the product architecture instead of acting as decoration.</h2>
+        <p>StrataOps uses CSS perspective planes for roadmap, risk, region, architecture, and integration layers, with stable controls and readable labels outside tilted surfaces.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>5 layers</strong><span>roadmap, risk, customer, region, architecture</span></div>
+        <div class="client-proof-kpi"><strong>12 deps</strong><span>visible across owner and confidence states</span></div>
+        <div class="client-proof-kpi"><strong>84%</strong><span>alignment score before release review</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>The spatial scene is inspectable, flattened on mobile, and tied to product objects buyers understand.</span></div>
+      </div>
+    </section></main>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+  <script type="module">
+    import * as THREE from "../../node_modules/three/build/three.module.js";
+    const mount = document.querySelector(".three-proof");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (mount) {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+      camera.position.set(0, 1.1, 5.4);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      mount.appendChild(renderer.domElement);
+      const colors = [0x67e8f9, 0x8b5cf6, 0x37d67a, 0xf59e0b];
+      const group = new THREE.Group();
+      colors.forEach((color, i) => {
+        const geometry = new THREE.BoxGeometry(2.8 - i * .28, .08, 1.25 - i * .08);
+        const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .32 + i * .08 });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(0, (i - 1.5) * .36, -i * .24);
+        mesh.rotation.x = -.62;
+        mesh.rotation.z = .08 * (i - 1.5);
+        group.add(mesh);
+      });
+      scene.add(group);
+      function resize() {
+        const rect = mount.getBoundingClientRect();
+        renderer.setSize(rect.width, rect.height || 240, false);
+        camera.aspect = rect.width / (rect.height || 240);
+        camera.updateProjectionMatrix();
+      }
+      resize();
+      window.addEventListener("resize", resize);
+      function frame(t) {
+        if (!reduceMotion) group.rotation.y = Math.sin(t / 1600) * .22;
+        renderer.render(scene, camera);
+        requestAnimationFrame(frame);
+      }
+      frame(0);
+    }
+  </script>
+</body>
+</html>

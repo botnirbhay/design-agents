@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Obsidian Gate - Premium Dark Cloud Security</title>
+  <style>
+    :root {
+      --bg: #05070b;
+      --bg-2: #090d14;
+      --panel: #0d131d;
+      --panel-2: #121a27;
+      --panel-3: #182236;
+      --ink: #f1f6ff;
+      --text: #dbe6f7;
+      --muted: #9daabe;
+      --line: #253246;
+      --line-strong: #3d506e;
+      --accent: #7aa2ff;
+      --accent-2: #59d8c8;
+      --ok: #42d392;
+      --warn: #f2c14e;
+      --bad: #ff6b6b;
+      --focus: #add0ff;
+      --shadow: 0 30px 90px rgba(0,0,0,.45);
+      --soft-shadow: 0 18px 55px rgba(0,0,0,.28);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 70% -10%, rgba(122,162,255,.2), transparent 30%),
+        radial-gradient(circle at 8% 12%, rgba(89,216,200,.11), transparent 24%),
+        linear-gradient(180deg, #05070b 0%, #0b1018 44%, #05070b 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a, button { font: inherit; color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      width: min(1240px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 20px 0 58px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #031018;
+      box-shadow: 0 16px 44px rgba(122,162,255,.18);
+    }
+
+    .navlinks {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .navlinks a {
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      text-decoration: none;
+    }
+
+    .navlinks a:hover { color: var(--ink); background: rgba(255,255,255,.06); }
+
+    .button,
+    button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #0c121c;
+      color: var(--ink);
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .button:hover,
+    button:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+      background: #111a28;
+      box-shadow: 0 14px 34px rgba(0,0,0,.28);
+    }
+
+    .primary {
+      border: 0;
+      color: #051018;
+      background: linear-gradient(135deg, #f4f8ff, var(--accent));
+      font-weight: 850;
+    }
+
+    .danger {
+      color: #ffd7d7;
+      border-color: rgba(255,107,107,.36);
+      background: rgba(255,107,107,.08);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: .88fr 1.12fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .hero-copy,
+    .panel,
+    .card,
+    .code-panel,
+    .status-surface {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(18,26,39,.95), rgba(10,15,23,.95));
+      border-radius: 12px;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .hero-copy {
+      min-height: 560px;
+      padding: 28px;
+      display: grid;
+      align-content: space-between;
+      gap: 24px;
+    }
+
+    .eyebrow,
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      width: max-content;
+      max-width: 100%;
+      padding: 6px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .badge.ok { color: var(--ok); border-color: rgba(66,211,146,.25); background: rgba(66,211,146,.08); }
+    .badge.warn { color: var(--warn); border-color: rgba(242,193,78,.28); background: rgba(242,193,78,.08); }
+    .badge.bad { color: var(--bad); border-color: rgba(255,107,107,.3); background: rgba(255,107,107,.08); }
+    .badge.info { color: var(--accent); border-color: rgba(122,162,255,.3); background: rgba(122,162,255,.09); }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 0 5px rgba(66,211,146,.1);
+      flex: none;
+    }
+
+    .dot.warn { background: var(--warn); box-shadow: 0 0 0 5px rgba(242,193,78,.1); }
+    .dot.bad { background: var(--bad); box-shadow: 0 0 0 5px rgba(255,107,107,.09); }
+    .dot.info { background: var(--accent); box-shadow: 0 0 0 5px rgba(122,162,255,.1); }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin: 16px 0; font-size: clamp(2.65rem, 6.7vw, 6.7rem); line-height: .89; letter-spacing: 0; max-width: 850px; }
+    h2 { margin-bottom: 10px; font-size: clamp(1.4rem, 3vw, 2.45rem); line-height: 1; letter-spacing: 0; }
+    h3 { margin-bottom: 8px; font-size: 1rem; line-height: 1.18; letter-spacing: 0; }
+    p { color: var(--text); line-height: 1.58; }
+    .lead { max-width: 650px; color: var(--muted); font-size: 1.08rem; line-height: 1.65; }
+    .muted { color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .proof-mini {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0a1018;
+    }
+
+    .proof-mini strong { display: block; font-size: 1.55rem; line-height: 1; font-variant-numeric: tabular-nums; }
+    .proof-mini span { color: var(--muted); font-size: .84rem; }
+
+    .code-panel {
+      overflow: hidden;
+      min-height: 560px;
+      box-shadow: var(--shadow);
+    }
+
+    .code-tabs,
+    .code-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+      background: #0c121c;
+    }
+
+    .code-footer { border-top: 1px solid var(--line); border-bottom: 0; }
+
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .tab {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+      font-size: .84rem;
+    }
+
+    .tab.active { color: var(--ink); border-color: rgba(122,162,255,.35); background: rgba(122,162,255,.12); }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.68;
+      color: #dce8ff;
+      font-size: .92rem;
+    }
+
+    .code-body {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+      background: #070b11;
+    }
+
+    .code-block,
+    .log-block,
+    .finding {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #05080d;
+      padding: 14px;
+    }
+
+    .code-key { color: #9ec2ff; }
+    .code-string { color: #92e6cd; }
+    .code-warn { color: var(--warn); }
+    .code-bad { color: var(--bad); }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card,
+    .panel { padding: 17px; position: relative; overflow: hidden; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+
+    .card:hover,
+    .panel:hover {
+      transform: translateY(-3px);
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .metric { font-size: 2.45rem; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; margin: 12px 0 7px; }
+    .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .accent { color: var(--accent); }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .status-surface {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .surface-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+      background: #0c121c;
+    }
+
+    .checks {
+      display: grid;
+      gap: 9px;
+      padding: 15px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0a1018;
+    }
+
+    .regions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .region {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0a1018;
+    }
+
+    .trust-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .92rem;
+    }
+
+    .trust-table th,
+    .trust-table td {
+      padding: 11px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .trust-table th { color: var(--muted); font-weight: 760; }
+
+    .integrations {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .integration {
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #0a1018;
+      color: var(--text);
+      font-weight: 760;
+      font-size: .88rem;
+    }
+
+    .wide { grid-column: span 2; }
+
+    .cta-card {
+      margin-top: 16px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      border: 1px solid rgba(122,162,255,.28);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #101828, #17254a 62%, #0f3837);
+      box-shadow: var(--shadow);
+    }
+
+    .cta-card p { color: #dce7ff; }
+
+    @keyframes draw {
+      from { opacity: .45; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .check,
+    .card,
+    .code-block,
+    .log-block { animation: draw .55s ease both; }
+
+    @media (max-width: 980px) {
+      .topbar,
+      .hero,
+      .workflow,
+      .cta-card { grid-template-columns: 1fr; }
+      .navlinks { justify-content: start; }
+      .hero-copy,
+      .code-panel { min-height: auto; }
+      .section-grid { grid-template-columns: 1fr; }
+      .wide { grid-column: auto; }
+      .regions { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 20px, 1240px); padding-top: 12px; }
+      h1 { font-size: clamp(2.4rem, 15vw, 4.4rem); }
+      .proof-strip,
+      .regions { grid-template-columns: 1fr; }
+      .code-tabs,
+      .code-footer,
+      .surface-header { align-items: start; flex-direction: column; }
+      .check { grid-template-columns: auto 1fr; }
+      .check .badge { grid-column: 2; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+
+      .button:hover,
+      button:hover,
+      .card:hover,
+      .panel:hover { transform: none; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    .library-chart-wrap {
+      min-height: 190px;
+      padding: 12px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background: rgba(255,255,255,.055);
+    }
+    .library-chart-wrap canvas { width: 100% !important; height: 170px !important; }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar" aria-label="Product navigation">
+      <a class="brand" href="../../index.html"><span class="mark">O</span>Obsidian Gate</a>
+      <div class="navlinks">
+        <a href="#workflow">Deploy workflow</a>
+        <a href="#trust">Trust</a>
+        <a href="#integrations">Integrations</a>
+        <a href="#start">Start</a>
+      </div>
+      <a class="button primary" href="#start">Start secure deploy</a>
+    </nav>
+
+    <header class="hero">
+      <section class="hero-copy">
+        <div>
+          <span class="eyebrow"><span class="dot"></span> Runtime policy for cloud deployment teams</span>
+          <h1>Block risky deploys before production learns about them.</h1>
+          <p class="lead">Obsidian Gate evaluates canaries, secrets, regions, approvals, and runtime drift in one dark-first control layer built for platform and security engineering.</p>
+          <div class="hero-actions"><a class="button primary" href="#workflow">Inspect deploy path</a><a class="button" href="#trust">View controls</a></div>
+        </div>
+        <div class="proof-strip" aria-label="Technical proof metrics">
+          <div class="proof-mini"><strong>99.98%</strong><span>canary health - 5m fresh</span></div>
+          <div class="proof-mini"><strong>184</strong><span>secrets rotated - 30d</span></div>
+          <div class="proof-mini"><strong>7</strong><span>open risks - 2 blocked</span></div>
+        </div>
+      </section>
+
+      <article class="code-panel" aria-label="Policy code and release log preview">
+        <div class="code-tabs"><div class="tabs"><span class="tab active">policy.ts</span><span class="tab">release.log</span><span class="tab">rollback.yaml</span></div><span class="badge warn">prod / api-edge</span></div>
+        <div class="code-body">
+          <div class="code-block"><pre class="mono"><span class="code-key">policy</span>("prod-api-edge", {
+  environment: <span class="code-string">"production"</span>,
+  canary: { max: <span class="code-string">"12%"</span>, rollback: <span class="code-string">"automatic"</span> },
+  require: [<span class="code-string">"security.approval"</span>, <span class="code-string">"slo.budget"</span>],
+  blockWhen: key.ageDays &gt; <span class="code-string">90</span>
+})</pre></div>
+          <div class="log-block"><pre class="mono"><span class="ok">?</span> checkpoint rbk_82H1 generated
+<span class="ok">?</span> SOC2 evidence attached by platform-security
+<span class="code-warn">!</span> eu-west latency p95 above 180ms guardrail
+<span class="code-bad">-</span> deploy paused until regional owner approves retry</pre></div>
+          <div class="finding"><span class="badge warn">Policy warning</span><p>Canary exceeds default budget in <strong>eu-west-1</strong>. Owner: <span class="mono">rhea.platform</span>. Suggested action: retry with regional drain or reduce canary to 8%.</p></div>
+        </div>
+        <div class="code-footer"><span class="muted">Branch release/canary-184 - updated 42s ago</span><button type="button">Copy policy</button></div>
+      </article>
+    </header>
+
+    <section class="section-grid" aria-label="Infrastructure and security metrics">
+      <article class="card"><span class="badge ok">Healthy</span><h3>Edge availability</h3><div class="metric ok">99.98%</div><p class="muted">iad, sfo, fra, bom - last 5 minutes</p></article>
+      <article class="card"><span class="badge warn">Review</span><h3>Open release risks</h3><div class="metric warn">7</div><p class="muted">2 blocked by missing security owner</p></article>
+      <article class="card"><span class="badge info">Fresh</span><h3>Audit evidence</h3><div class="metric">1.8k</div><p class="muted">controls exported this month</p></article>
+    </section>
+
+    <section id="workflow" class="workflow" aria-label="Secure deployment workflow">
+      <article class="status-surface">
+        <div class="surface-header"><h2>Deployment status surface</h2><span class="badge warn">Paused before prod</span></div>
+        <div class="checks">
+          <div class="check"><span class="dot"></span><div><strong>Generate rollback checkpoint</strong><br><span class="muted">rbk_82H1 stored in us-east-1</span></div><span class="badge ok">Passed</span></div>
+          <div class="check"><span class="dot"></span><div><strong>Verify compliance pack</strong><br><span class="muted">SOC2, ISO, and deploy evidence attached</span></div><span class="badge ok">Passed</span></div>
+          <div class="check"><span class="dot warn"></span><div><strong>Regional latency guard</strong><br><span class="muted">eu-west-1 p95 212ms above threshold</span></div><span class="badge warn">Watch</span></div>
+          <div class="check"><span class="dot bad"></span><div><strong>Approval owner</strong><br><span class="muted">platform-security has not approved retry</span></div><span class="badge bad">Blocked</span></div>
+          <div class="regions" aria-label="Regional deployment health"><div class="region"><strong>iad</strong><br><span class="ok">healthy</span></div><div class="region"><strong>sfo</strong><br><span class="ok">healthy</span></div><div class="region"><strong>fra</strong><br><span class="warn">watch</span></div><div class="region"><strong>bom</strong><br><span class="ok">healthy</span></div></div>
+        </div>
+      </article>
+
+      <aside class="panel" id="trust">
+        <span class="badge info">Technical trust</span>
+        <h2>Controls mapped to every deploy.</h2>
+        <table class="trust-table">
+          <thead><tr><th>Control</th><th>Coverage</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Audit exports</td><td>100% of prod releases</td><td><span class="badge ok">Ready</span></td></tr>
+            <tr><td>Key rotation</td><td>184 rotated - 4 due</td><td><span class="badge warn">Due</span></td></tr>
+            <tr><td>Region policy</td><td>18 active regions</td><td><span class="badge ok">Enforced</span></td></tr>
+            <tr><td>Rollback drill</td><td>Median 18 minutes</td><td><span class="badge info">Fresh</span></td></tr>
+          </tbody>
+        </table>
+        <p class="muted">Every row links to owner, environment, branch, evidence bundle, and timestamp in the real product.</p>
+      </aside>
+    </section>
+
+    <section class="section-grid" id="integrations" aria-label="Feature modules and integrations">
+      <article class="card wide"><span class="badge info">Developer workflow</span><h2>From pull request to policy decision.</h2><p>Obsidian Gate annotates the release diff, checks SLO budget, verifies secrets age, creates rollback checkpoints, and pauses only the risky region instead of blocking the entire deployment.</p><div class="integrations"><span class="integration"><span class="dot"></span>GitHub</span><span class="integration"><span class="dot"></span>AWS</span><span class="integration"><span class="dot"></span>Datadog</span><span class="integration"><span class="dot warn"></span>Okta</span><span class="integration"><span class="dot"></span>PagerDuty</span></div></article>
+      <article class="card"><span class="badge ok">Customer proof</span><p>"We stopped arguing about whether a deploy was safe. The policy evidence is attached before release review starts."</p><p class="muted">Rhea M., Security Engineering at Northstar Cloud</p></article>
+      <article class="card"><span class="badge bad">Risk state</span><h3>Privileged token age</h3><div class="metric bad">94d</div><p class="muted">Deploybot token must rotate before next full rollout.</p><button class="danger" type="button">Open rotation task</button></article>
+      <article class="card"><span class="badge ok">Secure default</span><h3>Rollback path</h3><p>Automatic rollback is armed for every canary over 5% and requires no new approval when reverting to last known-good.</p></article>
+    </section>
+
+    <section class="cta-card" id="start">
+      <div>
+        <span class="badge info">Precise conversion</span>
+        <h2>Secure every deploy path before the risky one ships.</h2>
+        <p>Connect your release pipeline, import your controls, and run the first policy decision against a real production branch.</p>
+      </div>
+      <div class="hero-actions"><a class="button primary" href="#workflow">Start secure deploy</a><a class="button" href="../../index.html">Back to demos</a></div>
+    </section>
+  
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Deploy evidence packet for security and platform buyers.</h2>
+        <p>Premium Dark should earn trust through code, checks, regional coverage, rollback evidence, and compliance states before asking for conversion.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="library-chart-wrap"><span class="artifact-pill">Chart.js powered</span><canvas class="library-chart" data-chart="bar" data-label="Policy checks passed" data-values="88,102,119,128,126,128" aria-label="Policy checks passed chart"></canvas></div>
+        <div class="artifact-row"><span class="artifact-node">D1</span><div><strong>Policy decision</strong><span>128 checks passed, 2 require owner approval</span></div><span class="artifact-pill">Policy</span></div>
+        <div class="artifact-row"><span class="artifact-node">D2</span><div><strong>Regional canary</strong><span>fra paused, iad/sfo/bom healthy</span></div><span class="artifact-pill">Region</span></div>
+        <div class="artifact-row"><span class="artifact-node">D3</span><div><strong>Rollback checkpoint</strong><span>Snapshot created before privileged token rotation</span></div><span class="artifact-pill">Safe</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Security launch proof">
+      <div>
+        <span class="proof-label">Security launch proof</span>
+        <h2>A dark technical launch page grounded in code, deploy checks, and policy evidence.</h2>
+        <p>Obsidian Gate shows the concrete buyer journey from policy decision to deployment health, with regions, owners, branch context, rollback safety, and compliance coverage.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>128 checks</strong><span>run before production deploy</span></div>
+        <div class="client-proof-kpi"><strong>6 regions</strong><span>policy coverage by environment</span></div>
+        <div class="client-proof-kpi"><strong>0 drift</strong><span>blocked secrets and config variance</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>The page sells through believable technical artifacts instead of vague dark-mode drama.</span></div>
+      </div>
+    </section></main>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+  <script type="module">
+    import { Chart, LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend } from "../../node_modules/chart.js/dist/chart.js";
+    Chart.register(LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend);
+    const canvas = document.querySelector(".library-chart");
+    if (canvas) {
+      const mode = canvas.dataset.chart || "line";
+      const grid = "rgba(148,163,184,.22)";
+      const ink = getComputedStyle(document.body).color || "#dbeafe";
+      new Chart(canvas, {
+        type: mode === "bar" ? "bar" : "line",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+          datasets: [{
+            label: canvas.dataset.label || "Product signal",
+            data: (canvas.dataset.values || "42,58,51,74,88,69").split(",").map(Number),
+            borderColor: "#67e8f9",
+            backgroundColor: mode === "bar" ? "rgba(103,232,249,.45)" : "rgba(103,232,249,.16)",
+            pointBackgroundColor: "#8b5cf6",
+            tension: .38,
+            fill: mode !== "bar",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { color: grid }, ticks: { color: ink } },
+            y: { grid: { color: grid }, ticks: { color: ink }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

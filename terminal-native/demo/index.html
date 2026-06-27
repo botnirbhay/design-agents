@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RailwayOps CLI - Terminal Native Devtool</title>
+  <style>
+    :root {
+      --bg: #06090d;
+      --panel: #0d131b;
+      --panel-2: #101821;
+      --panel-3: #070c12;
+      --ink: #e9f1f8;
+      --muted: #8d9aa8;
+      --soft: #68798a;
+      --line: #243242;
+      --line-strong: #3b526d;
+      --accent: #68a7ff;
+      --ok: #42d392;
+      --warn: #f2c14e;
+      --bad: #ff6b6b;
+      --focus: #8ec5ff;
+      --shadow: 0 18px 48px rgba(0,0,0,.32);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 0%, rgba(104,167,255,.14), transparent 28%),
+        linear-gradient(180deg, #05080c, var(--bg));
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a, button, input { font: inherit; }
+    a { color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    button, .button, input {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    button, .button {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 7px 10px;
+      background: #111c28;
+      color: var(--ink);
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+
+    button:hover, .button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: #152436;
+      box-shadow: 0 10px 26px rgba(0,0,0,.22);
+    }
+
+    button:active, .button:active { transform: translateY(0) scale(.99); }
+
+    .primary { background: linear-gradient(135deg, #276dff, #1d9b72); border-color: transparent; font-weight: 850; }
+    .danger { color: #ffd7dc; border-color: #74313b; background: #33171c; }
+    .ghost { background: #0a1118; }
+
+    .mono, pre, code, input { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    .app {
+      width: min(1580px, calc(100% - 20px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 10px 0 18px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+    }
+
+    .panel, .topbar, .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .mark {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: #051017;
+      background: linear-gradient(135deg, var(--accent), var(--ok));
+      box-shadow: 0 12px 34px rgba(104,167,255,.22);
+    }
+
+    .statusbar, .actions, .tabs, .chips {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .statusbar { justify-content: center; color: var(--muted); }
+    .actions { justify-content: flex-end; }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font-size: 1.2rem; line-height: 1.15; }
+    h2 { margin-bottom: 10px; font-size: 1rem; line-height: 1.2; }
+    h3 { margin-bottom: 7px; font-size: .9rem; }
+
+    .muted { color: var(--muted); }
+    .soft { color: var(--soft); }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .info { color: var(--accent); }
+
+    .tag, .kbd, .state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: max-content;
+      max-width: 100%;
+      padding: 4px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #0a1118;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 850;
+    }
+
+    .state.ok { color: #cbffe6; border-color: #275d48; background: rgba(66,211,146,.1); }
+    .state.warn { color: #ffe6a5; border-color: #665226; background: rgba(242,193,78,.12); }
+    .state.bad { color: #ffd7dc; border-color: #74313b; background: rgba(255,107,107,.12); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr) 340px;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .sessions, .terminal, .context { padding: 12px; min-height: 0; }
+    .sessions { display: grid; align-content: start; gap: 8px; }
+    .terminal { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; }
+    .context { display: grid; align-content: start; gap: 12px; }
+
+    .session {
+      display: grid;
+      gap: 5px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      text-align: left;
+    }
+
+    .session.active { border-color: var(--accent); background: #102033; }
+
+    .palette {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-3);
+    }
+
+    .palette input {
+      width: 100%;
+      min-height: 36px;
+      padding: 8px 9px;
+      color: var(--ink);
+      background: #05090e;
+    }
+
+    .palette-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 8px;
+      border-radius: var(--radius);
+      background: #0d151e;
+      color: var(--muted);
+    }
+
+    .terminal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .output {
+      margin: 0;
+      min-height: 500px;
+      overflow: auto;
+      white-space: pre-wrap;
+      line-height: 1.58;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #03070b;
+      color: #dce8f7;
+      font-size: .9rem;
+    }
+
+    .prompt {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #05090e;
+    }
+
+    .prompt input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      outline: 0;
+    }
+
+    .rows { display: grid; gap: 8px; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+    }
+
+    .row b { white-space: nowrap; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+    }
+
+    th, td {
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { color: var(--muted); font-weight: 850; }
+
+    .bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .card { padding: 12px; }
+
+    .snippet {
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #03070b;
+      color: #dce8f7;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      font-size: .86rem;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1.1em;
+      background: var(--ink);
+      vertical-align: -2px;
+      animation: blink 1s steps(2, end) infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    @media (max-width: 1180px) {
+      .workspace, .bottom, .topbar { grid-template-columns: 1fr; }
+      .statusbar, .actions { justify-content: flex-start; }
+      .output { min-height: 360px; }
+    }
+
+    @media (max-width: 720px) {
+      .app { width: min(100% - 12px, 1580px); padding-top: 6px; }
+      .row, .palette-item { grid-template-columns: 1fr; }
+      .output { font-size: .82rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+      button:hover, .button:hover { transform: none; }
+      .cursor { opacity: 1; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar" aria-label="RailwayOps status bar">
+      <a class="brand" href="../../index.html"><span class="mark">R</span>RailwayOps CLI</a>
+      <div class="statusbar mono"><span>project northstar/api-edge</span><span>branch release/canary-184</span><span>env prod-eu</span><span class="warn">exit pending</span></div>
+      <div class="actions"><button>Copy command</button><button class="primary">Retry failed step</button><button class="danger">Cancel deploy</button></div>
+    </header>
+
+    <section class="workspace" aria-label="Terminal native developer workspace">
+      <aside class="panel sessions" aria-label="Sessions and command palette">
+        <h2>Sessions</h2>
+        <button class="session active"><strong>api-edge deploy</strong><span class="muted mono">running - 02m 14s - prod-eu</span><span class="state warn">guardrail failed</span></button>
+        <button class="session"><strong>fra trace inspect</strong><span class="muted mono">opened - tr_fra_82H</span><span class="state bad">latency breach</span></button>
+        <button class="session"><strong>token audit</strong><span class="muted mono">success - 18m ago</span><span class="state ok">clean</span></button>
+        <button class="session"><strong>docs search</strong><span class="muted mono">FRA-429 rollback</span><span class="state">ready</span></button>
+
+        <section class="palette" aria-label="Command palette">
+          <h2>Command palette</h2>
+          <input aria-label="Command palette search" value="retry fra guardrail">
+          <div class="palette-item"><span>Retry failed region with drain</span><b class="kbd">Enter</b></div>
+          <div class="palette-item"><span>Inspect trace tr_fra_82H</span><b class="kbd">T</b></div>
+          <div class="palette-item"><span>Open rollback docs</span><b class="kbd">D</b></div>
+        </section>
+      </aside>
+
+      <section class="panel terminal">
+        <div class="terminal-head">
+          <div class="tabs"><button class="primary">stdout</button><button>stderr</button><button>pipeline</button><button>diff</button></div>
+          <span class="tag mono">job dep_1842 - owner platform</span>
+        </div>
+        <pre class="output mono" aria-label="Deployment terminal output">$ railwayops deploy api-edge --env prod-eu --branch release/canary-184 --canary 12
+
+[10:42:07] ok   loaded project northstar/api-edge (workspace ws_9K2)
+[10:42:08] ok   resolved image ghcr.io/northstar/api-edge:2026.06.27-184
+[10:42:09] ok   policy deploy.freeze=false, approvals.security=1/1
+[10:42:10] warn canary=12% exceeds team default 10%; override approved by maya.k
+[10:42:12] ok   generated rollback checkpoint rbk_91F2 in iad,sfo,fra,bom
+[10:42:18] run  streaming rollout: iad=12% sfo=12% fra=12% bom=12%
+[10:42:31] err  fra health guard failed: p95=842ms target=180ms trace=tr_fra_82H
+[10:42:32] info paused rollout in fra; other regions remain at 12%
+[10:42:33] hint run: railwayops retry dep_1842 --region fra --drain 20 --guard latency
+[10:42:34] exit pending; rollback checkpoint available; no automatic rollback triggered <span class="cursor" aria-hidden="true"></span></pre>
+        <form class="prompt">
+          <span class="ok mono">prod-eu api-edge -</span>
+          <input aria-label="Command input" value="railwayops retry dep_1842 --region fra --drain 20 --guard latency">
+          <button type="button" class="primary">Run</button>
+        </form>
+      </section>
+
+      <aside class="panel context" aria-label="Run context and environment status">
+        <h2>Run context</h2>
+        <table>
+          <tr><th>Owner</th><td>platform / Maya K.</td></tr>
+          <tr><th>Branch</th><td class="mono">release/canary-184</td></tr>
+          <tr><th>Version</th><td class="mono">2026.06.27-184</td></tr>
+          <tr><th>Exit</th><td class="warn">pending guardrail</td></tr>
+          <tr><th>Duration</th><td>02m 14s</td></tr>
+          <tr><th>Rollback</th><td class="ok mono">rbk_91F2 ready</td></tr>
+        </table>
+
+        <h2>Environment status</h2>
+        <div class="rows">
+          <div class="row"><span>iad</span><b class="ok">healthy - 12%</b></div>
+          <div class="row"><span>sfo</span><b class="ok">healthy - 12%</b></div>
+          <div class="row"><span>fra</span><b class="bad">paused - p95 842ms</b></div>
+          <div class="row"><span>bom</span><b class="ok">healthy - 12%</b></div>
+        </div>
+
+        <h2>Keyboard shortcuts</h2>
+        <div class="chips"><span class="kbd">Ctrl K</span><span class="kbd">R retry</span><span class="kbd">T trace</span><span class="kbd">Esc cancel</span></div>
+      </aside>
+    </section>
+
+    <section class="bottom" aria-label="Supporting developer panels">
+      <article class="card">
+        <h2>Pipeline workflow</h2>
+        <div class="rows">
+          <div class="row"><span>Build image</span><b class="ok">passed</b></div>
+          <div class="row"><span>Policy check</span><b class="ok">passed</b></div>
+          <div class="row"><span>Regional canary</span><b class="bad">fra failed</b></div>
+          <div class="row"><span>Rollback decision</span><b class="warn">manual</b></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Config preview</h2>
+        <pre class="snippet mono">env: prod-eu
+service: api-edge
+branch: release/canary-184
+canary: 12
+latency_guard_ms: 180
+rollback: manual-approved
+owner: platform
+trace_sample_rate: 0.2</pre>
+      </article>
+
+      <article class="card">
+        <h2>Docs / help</h2>
+        <p class="muted">FRA-429 indicates the regional latency guard failed after upstream timeout. Retry with a 20% drain, then compare p95 over five minutes before rollback.</p>
+        <pre class="snippet mono">railwayops trace inspect tr_fra_82H
+railwayops rollback dep_1842 --checkpoint rbk_91F2
+railwayops docs open FRA-429</pre>
+        <button>Copy fix command</button>
+      </article>
+
+      <article class="card">
+        <h2>CLI snippets</h2>
+        <pre class="snippet mono"># promote if retry passes
+railwayops promote dep_1842 --regions iad,sfo,bom
+
+# cancel only failed region
+railwayops cancel dep_1842 --region fra
+
+# rotate deploy token
+railwayops token rotate deploybot --ttl 90d</pre>
+      </article>
+    </section>
+  
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Run context packet with command, exit status, and fix path.</h2>
+        <p>Terminal Native feels real when logs are attached to environment, owner, duration, trace ID, config diff, and a copyable remediation command.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="artifact-row"><span class="artifact-node">T1</span><div><strong>Command context</strong><span>railway deploy api-edge --env prod-eu</span></div><span class="artifact-pill">Command</span></div>
+        <div class="artifact-row"><span class="artifact-node">T2</span><div><strong>Exit state</strong><span>exit 1 - fra p95 latency breached guardrail</span></div><span class="artifact-pill">Failed</span></div>
+        <div class="artifact-row"><span class="artifact-node">T3</span><div><strong>Fix path</strong><span>rollback fra --checkpoint cp_1842 --owner platform</span></div><span class="artifact-pill">Copy</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Developer workflow proof">
+      <div>
+        <span class="proof-label">Developer workflow proof</span>
+        <h2>A command surface with real execution context, not fake terminal styling.</h2>
+        <p>RailwayOps CLI presents command input, sessions, stdout/stderr states, environment context, config preview, docs help, shortcuts, and actionable retry/cancel paths.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>3 envs</strong><span>preview, staging, production visible in context</span></div>
+        <div class="client-proof-kpi"><strong>exit 1</strong><span>error includes owner, trace, and fix command</span></div>
+        <div class="client-proof-kpi"><strong>184s</strong><span>deploy duration with copyable logs</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>The interface is keyboard-first but still gives clear panes for status, docs, config, and remediation.</span></div>
+      </div>
+    </section></main>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+</body>
+</html>

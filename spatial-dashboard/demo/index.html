@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OrbitDesk - Spatial Dashboard Workspace</title>
+  <style>
+    :root {
+      --bg: #edf2f7;
+      --surface: rgba(255,255,255,.94);
+      --surface-2: #f8fbff;
+      --ink: #172335;
+      --muted: #66758a;
+      --line: #d8e2ee;
+      --line-strong: #b8c7dc;
+      --accent: #315dff;
+      --accent-2: #18a88f;
+      --ok: #087f5b;
+      --warn: #a45b00;
+      --bad: #b42318;
+      --focus: #86a2ff;
+      --shadow: 0 22px 70px rgba(35,50,80,.12);
+      --soft-shadow: 0 14px 38px rgba(35,50,80,.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 14% 0%, rgba(49,93,255,.14), transparent 30%),
+        radial-gradient(circle at 86% 8%, rgba(24,168,143,.12), transparent 24%),
+        linear-gradient(180deg, #fbfcff 0%, var(--bg) 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    a, button, input, select { font: inherit; color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    button,
+    .button,
+    select {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface);
+      padding: 8px 11px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    button:hover,
+    .button:hover,
+    select:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      box-shadow: 0 10px 24px rgba(35,50,80,.1);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      border-color: transparent;
+      font-weight: 800;
+    }
+
+    .workspace {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 236px minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel,
+    .sidebar,
+    .commandbar,
+    .drawer {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 14px;
+      height: calc(100vh - 28px);
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 16px 38px rgba(49,93,255,.22);
+    }
+
+    .side-nav,
+    .context-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .side-nav a,
+    .context-list button {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+    }
+
+    .side-nav a[aria-current="page"],
+    .context-list button.active {
+      color: var(--ink);
+      border-color: var(--line);
+      background: var(--surface-2);
+      box-shadow: 0 8px 20px rgba(35,50,80,.06);
+    }
+
+    .badge,
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: max-content;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .status.ok { color: var(--ok); border-color: #b9ead8; background: #effbf6; }
+    .status.warn { color: var(--warn); border-color: #efcf96; background: #fff6e7; }
+    .status.bad { color: var(--bad); border-color: #efbbb6; background: #fff3f2; }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+      flex: 0 0 auto;
+    }
+    .dot.warn { background: var(--warn); }
+    .dot.bad { background: var(--bad); }
+    .dot.info { background: var(--accent); }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .commandbar {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-2);
+      min-height: 42px;
+    }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      color: var(--muted);
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: white;
+      font-size: .78rem;
+    }
+
+    .canvas {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .primary-stack {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .overview {
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    h1, h2, h3, p { margin-top: 0; letter-spacing: 0; }
+    h1 { margin-bottom: 8px; font-size: clamp(1.8rem, 3.6vw, 3.4rem); line-height: .98; }
+    h2 { margin-bottom: 10px; font-size: 1.05rem; line-height: 1.2; }
+    h3 { margin-bottom: 7px; font-size: .95rem; }
+    p { color: var(--muted); line-height: 1.55; }
+    .muted { color: var(--muted); }
+
+    .overview-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .metric-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 13px;
+      background: var(--surface-2);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+      box-shadow: 0 14px 30px rgba(35,50,80,.08);
+    }
+
+    .metric {
+      font-size: 2rem;
+      line-height: 1;
+      font-weight: 900;
+      margin: 8px 0 5px;
+    }
+
+    .work-grid {
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 14px;
+    }
+
+    .chart-panel,
+    .queue-panel,
+    .timeline-panel,
+    .notifications-panel,
+    .actions-panel {
+      padding: 16px;
+    }
+
+    .chart {
+      height: 210px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background:
+        linear-gradient(to top, rgba(49,93,255,.14) 38%, transparent 38%),
+        repeating-linear-gradient(90deg, #edf2fa 0 1px, transparent 1px 52px),
+        var(--surface-2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart::after {
+      content: "";
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: 64px;
+      bottom: 44px;
+      border-bottom: 4px solid var(--accent);
+      border-right: 4px solid var(--accent-2);
+      transform: skew(-18deg);
+      border-radius: 0 0 14px 0;
+      animation: drawChart .9s ease both;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .queue,
+    .timeline,
+    .notifications,
+    .actions-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .queue-item,
+    .timeline-item,
+    .notification,
+    .action-item {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface-2);
+      padding: 11px;
+    }
+
+    .queue-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+    }
+
+    .time { color: var(--muted); font-size: .82rem; white-space: nowrap; }
+
+    .drawer {
+      padding: 16px;
+      position: sticky;
+      top: 14px;
+      transform: translateY(18px);
+      box-shadow: var(--shadow);
+      border-color: var(--line-strong);
+    }
+
+    .drawer-section {
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .drawer-section:first-of-type { border-top: 0; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .field-row:last-child { border-bottom: 0; }
+
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    @keyframes drawChart {
+      from { transform: skew(-18deg) scaleX(.3); transform-origin: left bottom; opacity: .45; }
+      to { transform: skew(-18deg) scaleX(1); opacity: 1; }
+    }
+
+    @media (max-width: 1120px) {
+      .workspace { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+      .canvas { grid-template-columns: 1fr; }
+      .drawer { position: static; transform: none; }
+    }
+
+    @media (max-width: 820px) {
+      .workspace { padding: 10px; }
+      .commandbar,
+      .metric-grid,
+      .work-grid { grid-template-columns: 1fr; }
+      .overview-head { flex-direction: column; }
+      .side-nav { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 540px) {
+      .side-nav { grid-template-columns: 1fr; }
+      .queue-item,
+      .field-row { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+
+      button:hover,
+      .button:hover,
+      select:hover,
+      .metric-card:hover { transform: none; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    .library-chart-wrap {
+      min-height: 190px;
+      padding: 12px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background: rgba(255,255,255,.055);
+    }
+    .library-chart-wrap canvas { width: 100% !important; height: 170px !important; }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <main class="workspace">
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <div>
+        <a class="brand" href="../../index.html"><span class="mark">O</span>OrbitDesk</a>
+        <p class="muted">Portfolio workspace for product operations teams.</p>
+      </div>
+      <nav class="side-nav" aria-label="Primary navigation">
+        <a href="#" aria-current="page">Overview <span class="badge">Live</span></a>
+        <a href="#queue">Insight queue <span class="badge">8</span></a>
+        <a href="#timeline">Timeline</a>
+        <a href="#settings">Settings</a>
+      </nav>
+      <div class="context-list" aria-label="Saved workspaces">
+        <button class="active" type="button">Mobile launch <span class="status warn">Risk</span></button>
+        <button type="button">Enterprise renewal <span class="status ok">On track</span></button>
+        <button type="button">Support automation <span class="status">Draft</span></button>
+      </div>
+    </aside>
+
+    <section class="main" aria-labelledby="page-title">
+      <header class="commandbar" aria-label="Command and filters">
+        <label class="search"><span class="muted">Search</span><input value="mobile launch risks owner:maya" aria-label="Search projects, owners, and tasks"><span class="kbd">?K</span></label>
+        <select aria-label="Time range"><option>Next 14 days</option></select>
+        <button type="button">Filter owners</button>
+        <button class="primary" type="button">Create action</button>
+      </header>
+
+      <section class="canvas">
+        <div class="primary-stack">
+          <article class="panel overview">
+            <div class="overview-head">
+              <div><span class="badge"><span class="dot warn"></span> Selected project</span><h1 id="page-title">Mobile checkout launch</h1><p>One workspace for launch health, task ownership, release risk, timeline changes, and contextual actions.</p></div>
+              <button type="button">Share workspace</button>
+            </div>
+            <div class="metric-grid" aria-label="Project overview metrics">
+              <div class="metric-card" tabindex="0"><span class="muted">Launch health</span><div class="metric">84%</div><span class="status warn">approval risk</span></div>
+              <div class="metric-card" tabindex="0"><span class="muted">Open actions</span><div class="metric">23</div><span class="status">6 due today</span></div>
+              <div class="metric-card" tabindex="0"><span class="muted">Owner coverage</span><div class="metric">91%</div><span class="status ok">assigned</span></div>
+              <div class="metric-card" tabindex="0"><span class="muted">Data freshness</span><div class="metric">38s</div><span class="status ok">updated</span></div>
+            </div>
+          </article>
+
+          <section class="work-grid">
+            <article class="panel chart-panel" aria-labelledby="chart-title">
+              <h2 id="chart-title">Launch forecast</h2>
+              <div class="chart" role="img" aria-label="Forecast chart showing launch health rising after risk resolution"></div>
+              <div class="legend"><span class="badge"><span class="dot info"></span> Health</span><span class="badge"><span class="dot warn"></span> Approval load</span><span class="badge"><span class="dot"></span> Owner coverage</span></div>
+            </article>
+
+            <article id="queue" class="panel queue-panel" aria-labelledby="queue-title">
+              <h2 id="queue-title">Insight queue</h2>
+              <div class="queue">
+                <div class="queue-item"><div><strong>Approval bottleneck</strong><br><span class="muted">Legal review is blocking paid social variants.</span></div><span class="status warn">Today</span></div>
+                <div class="queue-item"><div><strong>Owner missing</strong><br><span class="muted">Android rollback task has no backup owner.</span></div><span class="status bad">Risk</span></div>
+                <div class="queue-item"><div><strong>Empty state</strong><br><span class="muted">No unresolved bugs match filter "checkout-copy".</span></div><span class="status ok">Clear</span></div>
+              </div>
+            </article>
+          </section>
+
+          <section class="work-grid">
+            <article id="timeline" class="panel timeline-panel" aria-labelledby="timeline-title">
+              <h2 id="timeline-title">Activity timeline</h2>
+              <div class="timeline">
+                <div class="timeline-item"><span class="time">11:42</span><div><strong>Maya reassigned launch note approval</strong><br><span class="muted">Moved from Legal Ops to Brand Review.</span></div></div>
+                <div class="timeline-item"><span class="time">11:18</span><div><strong>Forecast recalculated</strong><br><span class="muted">Health improved from 78% to 84% after owner coverage update.</span></div></div>
+                <div class="timeline-item"><span class="time">10:55</span><div><strong>AI insight created</strong><br><span class="muted">Approval risk predicted for paid social launch copy.</span></div></div>
+              </div>
+            </article>
+
+            <article class="panel notifications-panel" aria-labelledby="notifications-title">
+              <h2 id="notifications-title">Notifications</h2>
+              <div class="notifications">
+                <div class="notification"><strong>Rin mentioned you</strong><br><span class="muted">-Can you approve the release-room summary?-</span></div>
+                <div class="notification"><strong>Filter saved</strong><br><span class="muted">Owner: Maya - Risk: approval - Due: 14 days</span></div>
+                <div class="notification"><strong>Low-priority muted</strong><br><span class="muted">12 dependency updates hidden until tomorrow.</span></div>
+              </div>
+            </article>
+          </section>
+        </div>
+
+        <aside class="drawer" aria-labelledby="drawer-title">
+          <span class="badge"><span class="dot warn"></span> Detail drawer</span>
+          <h2 id="drawer-title">Selected: Approval bottleneck</h2>
+          <p>Paid social variants are waiting on legal review. The launch remains on track if approval lands before 16:00 UTC.</p>
+
+          <div class="drawer-section">
+            <div class="field-row"><span class="muted">Owner</span><strong>Maya Chen</strong></div>
+            <div class="field-row"><span class="muted">Due</span><strong>Today 16:00</strong></div>
+            <div class="field-row"><span class="muted">Impact</span><strong>Launch copy</strong></div>
+            <div class="field-row"><span class="muted">Status</span><span class="status warn">Waiting review</span></div>
+          </div>
+
+          <div class="drawer-section">
+            <h3>Quick actions</h3>
+            <div class="quick-actions"><button class="primary" type="button">Assign reviewer</button><button type="button">Snooze</button><button type="button">Open task</button></div>
+          </div>
+
+          <div id="settings" class="drawer-section">
+            <h3>Context controls</h3>
+            <div class="quick-actions"><button type="button">Compact density</button><button type="button">Focus mode</button><button type="button">Mute low priority</button></div>
+          </div>
+        </aside>
+      </section>
+    </section>
+  
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Selected-object drawer that proves this is a daily workspace.</h2>
+        <p>Spatial Dashboard needs a real selected object with queue position, timeline, owner, due date, notifications, and quick actions.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="library-chart-wrap"><span class="artifact-pill">Chart.js powered</span><canvas class="library-chart" data-chart="line" data-label="Workspace risk resolved" data-values="14,18,22,31,45,52" aria-label="Workspace risk resolved chart"></canvas></div>
+        <div class="artifact-row"><span class="artifact-node">W1</span><div><strong>Selected task</strong><span>Approval bottleneck for paid social variants</span></div><span class="artifact-pill">Object</span></div>
+        <div class="artifact-row"><span class="artifact-node">W2</span><div><strong>Timeline context</strong><span>4 events explain why it is blocked today</span></div><span class="artifact-pill">History</span></div>
+        <div class="artifact-row"><span class="artifact-node">W3</span><div><strong>Quick action</strong><span>Assign reviewer without losing dashboard context</span></div><span class="artifact-pill">Action</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Daily workspace proof">
+      <div>
+        <span class="proof-label">Daily workspace proof</span>
+        <h2>A layered dashboard for repeated work, not a floating-card poster.</h2>
+        <p>OrbitDesk keeps navigation, command search, selected project state, insight queue, timeline, metrics, notifications, and detail drawer connected to one workspace.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>8 insights</strong><span>ranked by owner, due date, and risk</span></div>
+        <div class="client-proof-kpi"><strong>3 panels</strong><span>overview, queue, detail drawer kept in context</span></div>
+        <div class="client-proof-kpi"><strong>24h</strong><span>timeline with activity and next actions</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>Depth supports task hierarchy while keyboard paths, filters, and selected-object context stay stable.</span></div>
+      </div>
+    </section></main>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+  <script type="module">
+    import { Chart, LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend } from "../../node_modules/chart.js/dist/chart.js";
+    Chart.register(LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend);
+    const canvas = document.querySelector(".library-chart");
+    if (canvas) {
+      const mode = canvas.dataset.chart || "line";
+      const grid = "rgba(148,163,184,.22)";
+      const ink = getComputedStyle(document.body).color || "#dbeafe";
+      new Chart(canvas, {
+        type: mode === "bar" ? "bar" : "line",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+          datasets: [{
+            label: canvas.dataset.label || "Product signal",
+            data: (canvas.dataset.values || "42,58,51,74,88,69").split(",").map(Number),
+            borderColor: "#67e8f9",
+            backgroundColor: mode === "bar" ? "rgba(103,232,249,.45)" : "rgba(103,232,249,.16)",
+            pointBackgroundColor: "#8b5cf6",
+            tension: .38,
+            fill: mode !== "bar",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { color: grid }, ticks: { color: ink } },
+            y: { grid: { color: grid }, ticks: { color: ink }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pulseboard - Bento Motion AI Productivity SaaS</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: rgba(255,255,255,.92);
+      --surface-2: #f8fbff;
+      --ink: #142033;
+      --muted: #65748a;
+      --line: #d9e3f0;
+      --line-strong: #b8c7dc;
+      --blue: #315dff;
+      --cyan: #14a6a6;
+      --ok: #087f5b;
+      --warn: #a45b00;
+      --bad: #b42318;
+      --focus: #86a2ff;
+      --shadow: 0 22px 70px rgba(31, 50, 86, .11);
+      --shadow-soft: 0 14px 38px rgba(31, 50, 86, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(49,93,255,.14), transparent 30%),
+        radial-gradient(circle at 92% 12%, rgba(20,166,166,.13), transparent 24%),
+        linear-gradient(180deg, #fbfcff 0%, var(--bg) 48%, #edf3f9 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a, button { font: inherit; color: inherit; }
+
+    a:focus-visible,
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      width: min(1240px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 20px 0 56px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      box-shadow: 0 16px 40px rgba(49, 93, 255, .22);
+    }
+
+    .navlinks {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .navlinks a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
+
+    .navlinks a:hover {
+      color: var(--ink);
+      background: rgba(255,255,255,.7);
+    }
+
+    .button,
+    button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .button:hover,
+    button:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+      box-shadow: 0 14px 30px rgba(31, 50, 86, .1);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      color: white;
+      border-color: transparent;
+      font-weight: 800;
+    }
+
+    .eyebrow,
+    .chip,
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      width: max-content;
+      max-width: 100%;
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      color: #46566d;
+      font-size: .84rem;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 0 5px rgba(8,127,91,.12);
+      flex: 0 0 auto;
+    }
+
+    .dot.blue { background: var(--blue); box-shadow: 0 0 0 5px rgba(49,93,255,.12); }
+    .dot.warn { background: var(--warn); box-shadow: 0 0 0 5px rgba(164,91,0,.12); }
+    .dot.bad { background: var(--bad); box-shadow: 0 0 0 5px rgba(180,35,24,.1); }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin: 16px 0; max-width: 860px; font-size: clamp(2.7rem, 7vw, 6.8rem); line-height: .88; letter-spacing: 0; }
+    h2 { margin-bottom: 10px; font-size: clamp(1.45rem, 3vw, 2.5rem); line-height: 1; letter-spacing: 0; }
+    h3 { margin-bottom: 8px; font-size: 1rem; line-height: 1.18; letter-spacing: 0; }
+    p { line-height: 1.56; }
+    .lead { max-width: 690px; color: var(--muted); font-size: 1.08rem; line-height: 1.65; }
+    .muted { color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .hero-copy,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hero-copy {
+      min-height: 520px;
+      padding: 26px;
+      display: grid;
+      align-content: space-between;
+      gap: 22px;
+    }
+
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .proof-mini {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .proof-mini strong { display: block; font-size: 1.55rem; line-height: 1; }
+    .proof-mini span { color: var(--muted); font-size: .84rem; }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      padding: 17px;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .preview-card {
+      padding: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 520px;
+      background: linear-gradient(145deg, #fff, #f5f9ff);
+    }
+
+    .preview-top,
+    .preview-bottom {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .preview-bottom { border-top: 1px solid var(--line); border-bottom: 0; }
+
+    .preview-body {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 12px;
+    }
+
+    .product-panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      padding: 13px;
+      min-height: 0;
+    }
+
+    .rows { display: grid; gap: 8px; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface-2);
+    }
+
+    .row strong { font-size: .92rem; }
+    .row small { color: var(--muted); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .flow-step {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: white;
+      text-align: center;
+      font-weight: 780;
+      position: relative;
+      animation: stepGlow 4.4s ease-in-out infinite;
+    }
+
+    .flow-step:nth-child(2) { animation-delay: .25s; }
+    .flow-step:nth-child(3) { animation-delay: .5s; }
+    .flow-step:nth-child(4) { animation-delay: .75s; }
+
+    .bento-zone {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr .85fr;
+      grid-auto-rows: 176px;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .tall { grid-row: span 2; }
+
+    .metric {
+      font-size: 2.55rem;
+      line-height: 1;
+      font-weight: 920;
+      letter-spacing: 0;
+      margin: 12px 0 8px;
+    }
+
+    .trend-ok { color: var(--ok); font-weight: 800; }
+    .trend-warn { color: var(--warn); font-weight: 800; }
+
+    .bar {
+      height: 9px;
+      border-radius: 999px;
+      background: #e9eff7;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .bar span {
+      display: block;
+      width: var(--w, 60%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      animation: fill 1.6s ease both;
+    }
+
+    .mini-chart {
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      height: 110px;
+      margin-top: 10px;
+    }
+
+    .mini-chart i {
+      flex: 1;
+      min-width: 9px;
+      height: var(--h);
+      border-radius: 7px 7px 2px 2px;
+      background: linear-gradient(180deg, var(--blue), #9ec4ff);
+      transform-origin: bottom;
+      animation: rise .9s ease both;
+    }
+
+    .activity-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 9px;
+      align-items: center;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface-2);
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      font-size: .76rem;
+      font-weight: 850;
+    }
+
+    .integrations {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .integration {
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      font-size: .88rem;
+      font-weight: 760;
+    }
+
+    .quote {
+      font-size: 1.15rem;
+      line-height: 1.45;
+      color: #273852;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, #162033, #29416f 58%, #126f72);
+      color: white;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .cta-card p { color: #dce8ff; }
+    .cta-card .button:not(.primary) { color: white; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); }
+
+    @keyframes fill { from { width: 0; } }
+    @keyframes rise { from { transform: scaleY(.2); opacity: .45; } }
+    @keyframes stepGlow { 0%,100% { border-color: var(--line); transform: translateY(0); } 50% { border-color: #9db2ff; transform: translateY(-2px); } }
+
+    @media (max-width: 980px) {
+      .topbar { grid-template-columns: 1fr; align-items: start; }
+      .navlinks { justify-content: start; }
+      .hero,
+      .preview-body,
+      .bento-zone,
+      .cta-card { grid-template-columns: 1fr; }
+      .bento-zone { grid-auto-rows: auto; }
+      .span-2,
+      .span-3,
+      .tall { grid-column: auto; grid-row: auto; }
+      .hero-copy,
+      .preview-card { min-height: auto; }
+    }
+
+    @media (max-width: 640px) {
+      .shell { width: min(100% - 20px, 1240px); padding-top: 12px; }
+      h1 { font-size: clamp(2.35rem, 15vw, 4.2rem); }
+      .proof-strip,
+      .flow { grid-template-columns: 1fr; }
+      .preview-top,
+      .preview-bottom { align-items: start; flex-direction: column; }
+      .activity-item { grid-template-columns: auto 1fr; }
+      .activity-item .status { grid-column: 2; width: max-content; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+
+      .card:hover,
+      .button:hover,
+      button:hover {
+        transform: none;
+      }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    .enterprise-dossier {
+      grid-column: span 3;
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 14px;
+      min-height: 270px;
+      background:
+        linear-gradient(135deg, rgba(20,166,166,.12), transparent 34%),
+        linear-gradient(145deg, rgba(255,255,255,.98), rgba(241,247,255,.94));
+    }
+
+    .dossier-map {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .impact-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .impact-cell {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255,255,255,.74);
+    }
+
+    .impact-cell strong { display: block; font-size: 1.35rem; line-height: 1; }
+    .impact-cell span { display: block; margin-top: 6px; color: var(--muted); font-size: .84rem; line-height: 1.35; }
+
+    .policy-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .policy-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255,255,255,.68);
+    }
+
+    .policy-row .node {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: white;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      font-weight: 900;
+      font-size: .78rem;
+    }
+
+    @media (max-width: 980px) {
+      .enterprise-dossier { grid-column: span 1; grid-template-columns: 1fr; }
+      .impact-list { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    .library-chart-wrap {
+      min-height: 190px;
+      padding: 12px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background: rgba(255,255,255,.055);
+    }
+    .library-chart-wrap canvas { width: 100% !important; height: 170px !important; }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar" aria-label="Product navigation">
+      <a class="brand" href="../../index.html"><span class="mark">P</span>Pulseboard</a>
+      <div class="navlinks">
+        <a href="#story">Product story</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#proof">Proof</a>
+        <a href="#start">Start</a>
+      </div>
+      <a class="button primary" href="#start">Open launch room</a>
+    </nav>
+
+    <header class="hero" id="story">
+      <section class="hero-copy">
+        <div>
+          <span class="eyebrow"><span class="dot"></span> AI productivity control room for product ops</span>
+          <h1>One living grid for every launch signal.</h1>
+          <p class="lead">Pulseboard turns Slack spikes, Jira blockers, GitHub changes, customer commitments, and approval risk into a single accountable operating system for launch teams.</p>
+          <div class="hero-actions"><a class="button primary" href="#workflow">Watch the grid work</a><a class="button" href="#proof">See customer proof</a></div>
+        </div>
+        <div class="proof-strip" aria-label="Pulseboard proof metrics">
+          <div class="proof-mini"><strong>6m</strong><span>median approval latency</span></div>
+          <div class="proof-mini"><strong>14</strong><span>sources monitored</span></div>
+          <div class="proof-mini"><strong>42%</strong><span>faster launch decisions</span></div>
+        </div>
+      </section>
+
+      <article class="card preview-card" aria-label="Embedded Pulseboard product preview">
+        <div class="preview-top"><strong>Launch room / Mobile checkout v2</strong><span class="status"><span class="dot warn"></span> 3 risks active</span></div>
+        <div class="preview-body">
+          <section class="product-panel">
+            <h2>Today's operating summary</h2>
+            <div class="rows">
+              <div class="row"><div><strong>Payment QA blocker</strong><br><small>Owner requested from Release Ops - 09:42</small></div><span class="status"><span class="dot warn"></span> Blocked</span></div>
+              <div class="row"><div><strong>Customer note draft</strong><br><small>Legal approved wording - 10:16</small></div><span class="status"><span class="dot"></span> Ready</span></div>
+              <div class="row"><div><strong>Rollout confidence</strong><br><small>Based on 38 signals from 14 sources</small></div><strong>87%</strong></div>
+            </div>
+          </section>
+          <section class="product-panel">
+            <h3>Automation queue</h3>
+            <div class="rows">
+              <div class="row"><span>Standup digest</span><strong class="trend-ok">15:00</strong></div>
+              <div class="row"><span>Status page update</span><strong class="trend-warn">Review</strong></div>
+              <div class="row"><span>Jira blocker merge</span><strong class="trend-ok">Done</strong></div>
+            </div>
+            <div class="bar" aria-label="Automation safety progress"><span style="--w:78%"></span></div>
+          </section>
+        </div>
+        <div class="preview-bottom"><span class="muted">Last sync 2 minutes ago - Slack, Jira, GitHub, HubSpot</span><button type="button">Pause automation</button></div>
+      </article>
+    </header>
+
+    <section id="workflow" class="bento-zone" aria-label="Pulseboard bento product story">
+      <article class="card span-2 tall">
+        <span class="chip">Dominant product preview</span>
+        <h2>Observe, decide, and automate without losing the thread.</h2>
+        <p class="muted">The grid connects every card to the same launch object: one blocker, one owner, one customer-safe outcome.</p>
+        <div class="flow" aria-label="Workflow sequence">
+          <div class="flow-step">Observe signals</div>
+          <div class="flow-step">Assign owner</div>
+          <div class="flow-step">Draft update</div>
+          <div class="flow-step">Approve action</div>
+        </div>
+        <div class="rows">
+          <div class="row"><div><strong>Slack spike detected</strong><br><small>#launch-room mentioned checkout errors 18 times</small></div><span class="status"><span class="dot blue"></span> Source</span></div>
+          <div class="row"><div><strong>AI summary generated</strong><br><small>Customer-safe wording and owner recommendation attached</small></div><span class="status"><span class="dot"></span> Ready</span></div>
+          <div class="row"><div><strong>Human approval required</strong><br><small>Status page update affects 22 enterprise accounts</small></div><span class="status"><span class="dot warn"></span> Review</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <span class="chip">Metric</span>
+        <h3>Decision cycle</h3>
+        <div class="metric">18m</div>
+        <p class="muted">from blocker detection to assigned owner this week</p>
+        <p class="trend-ok">31% faster than last launch</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Status</span>
+        <h3>Sync health</h3>
+        <div class="metric">14/14</div>
+        <p class="muted">sources fresh within 5 minutes</p>
+        <div class="bar"><span style="--w:100%"></span></div>
+      </article>
+
+      <article class="card tall">
+        <span class="chip">Team activity</span>
+        <h3>What changed since standup</h3>
+        <div class="rows">
+          <div class="activity-item"><span class="avatar">MC</span><div><strong>Maya approved customer note</strong><br><small>10:16 - Legal wording accepted</small></div><span class="status"><span class="dot"></span> Done</span></div>
+          <div class="activity-item"><span class="avatar">RJ</span><div><strong>Ravi paused risky automation</strong><br><small>09:58 - waiting for QA owner</small></div><span class="status"><span class="dot warn"></span> Review</span></div>
+          <div class="activity-item"><span class="avatar">AI</span><div><strong>Pulseboard merged duplicate blockers</strong><br><small>09:51 - Jira EP-418 + EP-423</small></div><span class="status"><span class="dot blue"></span> Auto</span></div>
+          <div class="activity-item"><span class="avatar">DN</span><div><strong>Dina took mobile ownership</strong><br><small>09:42 - ETA 14:30 UTC</small></div><span class="status"><span class="dot"></span> Owner</span></div>
+        </div>
+      </article>
+
+      <article class="card span-2">
+        <span class="chip">Chart proof</span>
+        <h3>Launch pressure forecast</h3>
+        <div class="mini-chart" role="img" aria-label="Launch pressure forecast chart"><i style="--h:36%"></i><i style="--h:48%"></i><i style="--h:44%"></i><i style="--h:72%"></i><i style="--h:88%"></i><i style="--h:62%"></i><i style="--h:54%"></i></div>
+        <p class="muted">Bars combine customer promises, unresolved approvals, incident mentions, and team capacity by day.</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Automation</span>
+        <h3>Safe recurring updates</h3>
+        <div class="metric">31/40</div>
+        <p class="muted">weekly status routines automated with owner and policy checks</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Integrations</span>
+        <h3>Connected sources</h3>
+        <div class="integrations" aria-label="Integration health">
+          <span class="integration"><span class="dot"></span>Slack</span>
+          <span class="integration"><span class="dot"></span>Jira</span>
+          <span class="integration"><span class="dot"></span>GitHub</span>
+          <span class="integration"><span class="dot warn"></span>HubSpot</span>
+          <span class="integration"><span class="dot"></span>Linear</span>
+        </div>
+        <p class="muted">HubSpot sync degraded - retry scheduled 11:20</p>
+      </article>
+
+      <article class="card span-2" id="proof">
+        <span class="chip">Customer proof</span>
+        <p class="quote">"Pulseboard replaced three launch docs and made our approval risk visible before it hit customers."</p>
+        <p class="muted">Priya S., Director of Product Operations at Northstar Cloud</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Warning state</span>
+        <h3>Status page update</h3>
+        <p class="muted">External communication needs review because 22 enterprise accounts are subscribed.</p>
+        <button type="button">Review draft</button>
+      </article>
+
+
+      <article class="card enterprise-dossier">
+        <div class="dossier-map">
+          <span class="chip">Enterprise launch dossier</span>
+          <h2>Fortune 500 launch dossier with revenue exposure, policy gates, and source freshness.</h2>
+          <p class="muted">This tile is the buyer moment: product leaders can see customer impact, accountable owners, and what automation is allowed to do before the launch goes public.</p>
+          <div class="impact-list" aria-label="Enterprise launch impact metrics">
+            <div class="impact-cell"><strong>$4.8M</strong><span>renewal value tied to customers watching this rollout</span></div>
+            <div class="impact-cell"><strong>22</strong><span>enterprise accounts subscribed to status updates</span></div>
+            <div class="impact-cell"><strong>96%</strong><span>source freshness across launch dependencies</span></div>
+            <div class="impact-cell"><strong>2</strong><span>human approvals required before external send</span></div>
+          </div>
+        </div>
+        <div class="policy-stack" aria-label="Policy and source evidence">
+          <div class="policy-row"><span class="node">01</span><div><strong>Customer-safe wording</strong><br><small>Legal source: approved response library / v4.2</small></div><span class="status"><span class="dot"></span> Ready</span></div>
+          <div class="policy-row"><span class="node">02</span><div><strong>Release owner assigned</strong><br><small>Dina N. owns mobile checkout rollback decision</small></div><span class="status"><span class="dot"></span> Owner</span></div>
+          <div class="policy-row"><span class="node">03</span><div><strong>Status page automation</strong><br><small>Blocked until QA confirms payment error rate below 0.4%</small></div><span class="status"><span class="dot warn"></span> Gate</span></div>
+          <div class="policy-row"><span class="node">04</span><div><strong>Executive digest</strong><br><small>Draft includes impact, mitigation, confidence, and next checkpoint</small></div><span class="status"><span class="dot blue"></span> Draft</span></div>
+        </div>
+      </article>
+      <article class="card span-3 cta-card" id="start">
+        <div>
+          <span class="chip">CTA</span>
+          <h2>Make your next launch room accountable by default.</h2>
+          <p>Connect your work tools, define approval rules, and let Pulseboard turn scattered signals into one living grid.</p>
+        </div>
+        <div class="hero-actions"><a class="button primary" href="#story">Open sample grid</a><a class="button" href="../../index.html">Back to demos</a></div>
+      </article>
+    </section>
+  
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Launch-room command matrix for account impact and approval policy.</h2>
+        <p>Bento Motion should sell through a flagship grid where every tile has operational meaning, not through abstract visual variety.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="library-chart-wrap"><span class="artifact-pill">Chart.js powered</span><canvas class="library-chart" data-chart="bar" data-label="Launch risk pressure" data-values="18,24,31,46,39,22" aria-label="Launch risk pressure chart"></canvas></div>
+        <div class="artifact-row"><span class="artifact-node">B1</span><div><strong>Revenue exposure</strong><span>$4.8M renewal value tied to rollout</span></div><span class="artifact-pill">Impact</span></div>
+        <div class="artifact-row"><span class="artifact-node">B2</span><div><strong>Policy gate</strong><span>External status update blocked until QA threshold passes</span></div><span class="artifact-pill">Gate</span></div>
+        <div class="artifact-row"><span class="artifact-node">B3</span><div><strong>Source freshness</strong><span>14 systems checked within five minutes</span></div><span class="artifact-pill">Fresh</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Launch operations proof">
+      <div>
+        <span class="proof-label">Launch operations proof</span>
+        <h2>A real launch room with connected signals, not a decorative tile grid.</h2>
+        <p>Pulseboard ties each bento card to one product launch: blockers, customer commitments, source freshness, approval risk, team activity, and automation safety.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>14 sources</strong><span>Slack, Jira, GitHub, HubSpot, Linear, docs</span></div>
+        <div class="client-proof-kpi"><strong>42%</strong><span>faster decision cycles across launch reviews</span></div>
+        <div class="client-proof-kpi"><strong>3 risks</strong><span>active with owner, status, and next action</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>The largest cards carry product UI, while smaller cards prove metrics, integrations, warnings, and customer outcome.</span></div>
+      </div>
+    </section></main>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+  <script type="module">
+    import { Chart, LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend } from "../../node_modules/chart.js/dist/chart.js";
+    Chart.register(LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend);
+    const canvas = document.querySelector(".library-chart");
+    if (canvas) {
+      const mode = canvas.dataset.chart || "line";
+      const grid = "rgba(148,163,184,.22)";
+      const ink = getComputedStyle(document.body).color || "#dbeafe";
+      new Chart(canvas, {
+        type: mode === "bar" ? "bar" : "line",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+          datasets: [{
+            label: canvas.dataset.label || "Product signal",
+            data: (canvas.dataset.values || "42,58,51,74,88,69").split(",").map(Number),
+            borderColor: "#67e8f9",
+            backgroundColor: mode === "bar" ? "rgba(103,232,249,.45)" : "rgba(103,232,249,.16)",
+            pointBackgroundColor: "#8b5cf6",
+            tension: .38,
+            fill: mode !== "bar",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { color: grid }, ticks: { color: ink } },
+            y: { grid: { color: grid }, ticks: { color: ink }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

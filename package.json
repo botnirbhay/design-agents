@@ -1,0 +1,18 @@
+{
+    "name":  "design-agents-showcase",
+    "version":  "1.0.0",
+    "private":  true,
+    "description":  "Static design-agent demos with optional local JS libraries for premium UI proof.",
+    "scripts":  {
+                    "check":  "node scripts/check-demos.mjs",
+                    "dev":  "node scripts/serve.mjs"
+                },
+    "dependencies":  {
+                         "chart.js":  "^4.5.0",
+                         "gsap":  "^3.13.0",
+                         "three":  "^0.179.1"
+                     },
+    "devDependencies":  {
+
+                        }
+}

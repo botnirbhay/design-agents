@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Northbank Control - Enterprise Minimal</title>
+  <style>
+    :root {
+      --bg:#f5f7fa;
+      --surface:#ffffff;
+      --surface-2:#f9fafb;
+      --surface-3:#eef2f6;
+      --ink:#111827;
+      --text:#374151;
+      --muted:#6b7280;
+      --line:#d9e0e8;
+      --line-strong:#b8c2cf;
+      --primary:#2447c6;
+      --primary-ink:#ffffff;
+      --ok:#087443;
+      --ok-bg:#e8f6ee;
+      --warn:#9a5b00;
+      --warn-bg:#fff4db;
+      --bad:#b42318;
+      --bad-bg:#feeceb;
+      --info:#1d5f8f;
+      --info-bg:#e9f3fb;
+      --focus:#315cff;
+      --shadow:0 16px 42px rgba(17, 24, 39, .08);
+    }
+
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0;
+      min-height:100vh;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size:14px;
+      letter-spacing:0;
+    }
+
+    a, button, input, select { font:inherit; }
+    a { color:inherit; }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+      outline:3px solid color-mix(in srgb, var(--focus) 48%, transparent);
+      outline-offset:2px;
+      border-radius:6px;
+    }
+
+    .app { min-height:100vh; display:grid; grid-template-columns:248px minmax(0, 1fr); }
+    .sidebar {
+      background:#fbfcfd;
+      border-right:1px solid var(--line);
+      padding:16px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      position:sticky;
+      top:0;
+      height:100vh;
+    }
+    .brand { display:flex; align-items:center; gap:10px; padding:6px 8px; text-decoration:none; font-weight:800; }
+    .mark { width:32px; height:32px; border-radius:7px; display:grid; place-items:center; background:var(--ink); color:white; font-weight:900; }
+    .org-switch { border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:10px; }
+    .org-switch strong { display:block; font-size:.9rem; }
+    .org-switch span { display:block; color:var(--muted); font-size:.78rem; margin-top:2px; }
+    .nav-group { display:grid; gap:4px; }
+    .nav-label { color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; padding:0 8px 4px; font-weight:800; }
+    .nav-link {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      min-height:36px;
+      padding:8px 10px;
+      border-radius:7px;
+      color:var(--text);
+      text-decoration:none;
+      border:1px solid transparent;
+    }
+    .nav-link:hover { background:var(--surface-3); color:var(--ink); }
+    .nav-link.active { background:#eaf0ff; color:#163ba6; border-color:#cad7ff; font-weight:800; }
+    .count { min-width:22px; text-align:center; padding:2px 6px; border-radius:99px; background:var(--surface-3); color:var(--muted); font-size:.72rem; font-weight:800; }
+
+    .main { min-width:0; display:grid; grid-template-rows:auto 1fr; }
+    .topbar {
+      background:rgba(255,255,255,.92);
+      border-bottom:1px solid var(--line);
+      padding:14px 24px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      position:sticky;
+      top:0;
+      z-index:4;
+      backdrop-filter:blur(10px);
+    }
+    .search { flex:1; max-width:520px; position:relative; }
+    .search input { width:100%; min-height:38px; padding:8px 12px 8px 34px; border:1px solid var(--line); border-radius:7px; background:var(--surface-2); color:var(--ink); }
+    .search span { position:absolute; left:12px; top:9px; color:var(--muted); }
+    .top-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    button, .button {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:36px;
+      padding:8px 12px;
+      border:1px solid var(--line-strong);
+      border-radius:7px;
+      background:var(--surface);
+      color:var(--ink);
+      text-decoration:none;
+      cursor:pointer;
+      font-weight:700;
+      transition:background .14s ease, border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+    }
+    button:hover, .button:hover { background:#f7f9fc; border-color:#98a6b7; box-shadow:0 8px 18px rgba(17,24,39,.07); }
+    button:active, .button:active { transform:translateY(1px); }
+    .primary { background:var(--primary); border-color:var(--primary); color:var(--primary-ink); }
+    .primary:hover { background:#193aa8; border-color:#193aa8; }
+    .danger { color:var(--bad); border-color:#f1b7b2; background:#fffafa; }
+
+    .content { padding:22px 24px 36px; display:grid; gap:16px; }
+    .page-head { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:16px; align-items:end; }
+    h1, h2, h3, p { margin-top:0; }
+    h1 { font-size:1.55rem; line-height:1.2; margin-bottom:6px; letter-spacing:0; }
+    h2 { font-size:1rem; margin-bottom:4px; }
+    h3 { font-size:.92rem; margin-bottom:8px; }
+    p { color:var(--muted); line-height:1.55; margin-bottom:0; }
+    .subtle { color:var(--muted); }
+    .mono { font-family:ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; font-variant-numeric:tabular-nums; }
+
+    .summary { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; }
+    .stat, .panel {
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:8px;
+      box-shadow:0 1px 0 rgba(17,24,39,.03);
+    }
+    .stat { padding:14px; }
+    .stat span { color:var(--muted); font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+    .stat strong { display:block; margin-top:8px; font-size:1.45rem; font-variant-numeric:tabular-nums; }
+    .stat small { color:var(--muted); }
+    .risk { border-left:4px solid var(--bad); }
+    .good { border-left:4px solid var(--ok); }
+    .warned { border-left:4px solid var(--warn); }
+    .info { border-left:4px solid var(--info); }
+
+    .workspace { display:grid; grid-template-columns:minmax(0, 1fr) 340px; gap:16px; align-items:start; }
+    .panel-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .panel-title { display:flex; flex-direction:column; gap:2px; }
+    .panel-title strong { font-size:.96rem; }
+    .panel-title span { color:var(--muted); font-size:.8rem; }
+    .toolbar { padding:12px 16px; border-bottom:1px solid var(--line); display:grid; grid-template-columns:1.4fr repeat(3, minmax(130px, .5fr)) auto; gap:8px; align-items:end; background:var(--surface-2); }
+    label { display:grid; gap:4px; color:var(--text); font-weight:750; font-size:.78rem; }
+    input, select { min-height:36px; padding:8px 10px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--ink); }
+    .bulk { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:10px; align-items:center; background:#f8fbff; }
+    .bulk-actions { display:flex; gap:8px; flex-wrap:wrap; }
+
+    .table-wrap { overflow:auto; }
+    table { width:100%; min-width:920px; border-collapse:collapse; font-size:.88rem; }
+    th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); vertical-align:middle; }
+    th { color:var(--muted); background:#fbfcfe; font-size:.74rem; text-transform:uppercase; letter-spacing:.055em; white-space:nowrap; }
+    tbody tr:hover { background:#fbfdff; }
+    tbody tr.selected { background:#f2f6ff; }
+    .user { display:flex; gap:10px; align-items:center; min-width:220px; }
+    .avatar { width:30px; height:30px; border-radius:99px; background:#e7ecf4; display:grid; place-items:center; font-weight:850; color:#334155; flex:none; }
+    .user strong { display:block; }
+    .user span { color:var(--muted); font-size:.78rem; }
+    .badge { display:inline-flex; align-items:center; gap:6px; width:max-content; max-width:100%; padding:4px 8px; border-radius:999px; font-size:.76rem; font-weight:800; white-space:nowrap; border:1px solid transparent; }
+    .badge.ok { color:var(--ok); background:var(--ok-bg); border-color:#bfebcf; }
+    .badge.warn { color:var(--warn); background:var(--warn-bg); border-color:#f4d38d; }
+    .badge.bad { color:var(--bad); background:var(--bad-bg); border-color:#f4b4ae; }
+    .badge.info { color:var(--info); background:var(--info-bg); border-color:#bfdced; }
+    .pagination { padding:12px 16px; display:flex; justify-content:space-between; gap:12px; align-items:center; color:var(--muted); }
+
+    .side-stack { display:grid; gap:16px; }
+    .drawer { border:1px solid var(--line-strong); box-shadow:var(--shadow); }
+    .drawer-body { padding:14px 16px; display:grid; gap:14px; }
+    .review-box { border:1px solid var(--line); border-radius:8px; padding:12px; background:var(--surface-2); }
+    .review-box strong { display:block; margin-bottom:4px; }
+    .setting-row { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
+    .setting-row:last-child { border-bottom:0; }
+    .switch { width:42px; height:24px; border-radius:99px; background:#d8e0ea; padding:3px; border:1px solid #c6d0dd; }
+    .switch::after { content:""; display:block; width:16px; height:16px; border-radius:99px; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.2); transform:translateX(18px); }
+    .switch.off::after { transform:translateX(0); }
+
+    .lower-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .matrix { padding:0 16px 14px; overflow:auto; }
+    .matrix table { min-width:620px; }
+    .matrix td:first-child, .matrix th:first-child { font-weight:800; color:var(--ink); }
+    .audit { padding:4px 16px 14px; display:grid; gap:0; }
+    .event { display:grid; grid-template-columns:96px 1fr auto; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:start; }
+    .event:last-child { border-bottom:0; }
+    .event time { color:var(--muted); font-size:.8rem; }
+    .event strong { display:block; }
+    .event span { color:var(--muted); font-size:.8rem; }
+
+    .toast { position:fixed; right:22px; bottom:22px; max-width:360px; background:var(--ink); color:white; border-radius:8px; padding:13px 14px; box-shadow:var(--shadow); animation:slideIn .22s ease both; }
+    .toast strong { display:block; margin-bottom:3px; }
+    .toast span { color:#d8dee8; font-size:.86rem; }
+    @keyframes slideIn { from { opacity:0; transform:translateY(10px); } }
+
+    @media (max-width: 1080px) {
+      .app { grid-template-columns:1fr; }
+      .sidebar { position:static; height:auto; border-right:0; border-bottom:1px solid var(--line); }
+      .nav-group { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .workspace, .lower-grid, .summary { grid-template-columns:1fr; }
+      .toolbar { grid-template-columns:1fr 1fr; }
+      .page-head, .topbar { align-items:flex-start; flex-direction:column; }
+      .search { max-width:none; width:100%; }
+    }
+
+    @media (max-width: 720px) {
+      .content, .topbar { padding-left:12px; padding-right:12px; }
+      .nav-group, .toolbar { grid-template-columns:1fr; }
+      .bulk, .pagination { align-items:flex-start; flex-direction:column; }
+      table, thead, tbody, th, td, tr { display:block; min-width:0; }
+      thead { display:none; }
+      tbody tr { border-bottom:1px solid var(--line); padding:10px 12px; }
+      td { border-bottom:0; padding:6px 0; display:grid; grid-template-columns:120px 1fr; gap:10px; }
+      td::before { content:attr(data-label); color:var(--muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.05em; font-weight:800; }
+      td:first-child { display:block; }
+      td:first-child::before { content:""; display:none; }
+      .matrix table, .matrix tr, .matrix td { display:revert; }
+      .matrix thead { display:table-header-group; }
+      .event { grid-template-columns:1fr; gap:4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration:.001ms !important;
+        animation-iteration-count:1 !important;
+        scroll-behavior:auto !important;
+        transition:none !important;
+      }
+      button:active, .button:active { transform:none; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    .library-chart-wrap {
+      min-height: 190px;
+      padding: 12px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background: rgba(255,255,255,.055);
+    }
+    .library-chart-wrap canvas { width: 100% !important; height: 170px !important; }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Admin navigation">
+      <a class="brand" href="../../index.html"><span class="mark">N</span><span>Northbank Control</span></a>
+      <div class="org-switch" aria-label="Current organization">
+        <strong>Acme Biologics, Inc.</strong>
+        <span>Enterprise plan / US-EU tenant</span>
+      </div>
+      <nav class="nav-group" aria-label="Primary sections">
+        <div class="nav-label">Governance</div>
+        <a class="nav-link active" href="#users">Users <span class="count">842</span></a>
+        <a class="nav-link" href="#permissions">Roles <span class="count">18</span></a>
+        <a class="nav-link" href="#policies">Policies <span class="count">11</span></a>
+        <a class="nav-link" href="#audit">Audit logs <span class="count">2.4k</span></a>
+      </nav>
+      <nav class="nav-group" aria-label="Organization sections">
+        <div class="nav-label">Organization</div>
+        <a class="nav-link" href="#settings">SSO and SCIM</a>
+        <a class="nav-link" href="#reports">Reports</a>
+        <a class="nav-link" href="#settings">Billing access</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="search">
+          <span aria-hidden="true">/</span>
+          <input type="search" aria-label="Search users, roles, policies, or audit events" placeholder="Search users, roles, policies, audit events">
+        </div>
+        <div class="top-actions">
+          <a class="button" href="#audit">View audit trail</a>
+          <button type="button">Export SOC2 packet</button>
+          <button class="primary" type="button">Invite users</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="page-head" aria-labelledby="page-title">
+          <div>
+            <h1 id="page-title">Access review and policy enforcement</h1>
+            <p>Quarterly governance workspace for user access, high-risk roles, approval exceptions, and compliance exports.</p>
+          </div>
+          <div class="top-actions" aria-label="Review actions">
+            <button type="button">Save view</button>
+            <button class="primary" type="button">Approve selected</button>
+          </div>
+        </section>
+
+        <section class="summary" aria-label="Access review summary">
+          <article class="stat risk"><span>Requires review</span><strong>27</strong><small>12 privileged, 15 stale access</small></article>
+          <article class="stat warned"><span>Pending approvals</span><strong>9</strong><small>Managers due by Jun 30</small></article>
+          <article class="stat good"><span>Policy pass rate</span><strong>98.6%</strong><small>11 active controls</small></article>
+          <article class="stat info"><span>SOC2 evidence</span><strong>Ready</strong><small>Generated 27 Jun 2026</small></article>
+        </section>
+
+        <section class="workspace">
+          <div class="panel" id="users">
+            <div class="panel-head">
+              <div class="panel-title"><strong>User access inventory</strong><span>Showing 1-6 of 842 users. Sorted by risk and last activity.</span></div>
+              <button type="button">Columns</button>
+            </div>
+            <form class="toolbar" aria-label="User table filters">
+              <label>Search<input type="search" value="privileged OR inactive" aria-label="Filter user table"></label>
+              <label>Role<select aria-label="Filter by role"><option>All privileged roles</option><option>Workspace admin</option><option>Billing owner</option></select></label>
+              <label>Status<select aria-label="Filter by status"><option>Needs review</option><option>Active</option><option>Suspended</option></select></label>
+              <label>Team<select aria-label="Filter by team"><option>All teams</option><option>Finance</option><option>Clinical Ops</option><option>External partners</option></select></label>
+              <button type="button">Apply</button>
+            </form>
+            <div class="bulk" aria-label="Bulk actions">
+              <span><strong>3 selected</strong> / bulk changes require manager approval for privileged users.</span>
+              <div class="bulk-actions">
+                <button type="button">Request approval</button>
+                <button type="button">Downgrade role</button>
+                <button class="danger" type="button">Suspend access</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <caption class="subtle">User access table with roles, risk status, approvals, and last activity.</caption>
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="Select all visible users"></th>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Policy status</th>
+                    <th>Approval</th>
+                    <th>Last active</th>
+                    <th>Owner</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="selected">
+                    <td data-label="Select"><input type="checkbox" checked aria-label="Select Maya Kapoor"></td>
+                    <td data-label="User"><div class="user"><span class="avatar">MK</span><div><strong>Maya Kapoor</strong><span>maya.kapoor@acmebio.com</span></div></div></td>
+                    <td data-label="Role">Workspace admin</td>
+                    <td data-label="Policy"><span class="badge warn">Privileged review</span></td>
+                    <td data-label="Approval"><span class="badge info">CFO pending</span></td>
+                    <td data-label="Last active" class="mono">12 min ago</td>
+                    <td data-label="Owner">Finance Systems</td>
+                    <td data-label="Action"><button type="button">Review</button></td>
+                  </tr>
+                  <tr class="selected">
+                    <td data-label="Select"><input type="checkbox" checked aria-label="Select Daniel Cho"></td>
+                    <td data-label="User"><div class="user"><span class="avatar">DC</span><div><strong>Daniel Cho</strong><span>daniel.cho@vendor.example</span></div></div></td>
+                    <td data-label="Role">External analyst</td>
+                    <td data-label="Policy"><span class="badge bad">Stale access</span></td>
+                    <td data-label="Approval"><span class="badge warn">Manager due</span></td>
+                    <td data-label="Last active" class="mono">46 days ago</td>
+                    <td data-label="Owner">Clinical Ops</td>
+                    <td data-label="Action"><button type="button">Review</button></td>
+                  </tr>
+                  <tr>
+                    <td data-label="Select"><input type="checkbox" aria-label="Select Leena Torres"></td>
+                    <td data-label="User"><div class="user"><span class="avatar">LT</span><div><strong>Leena Torres</strong><span>leena.torres@acmebio.com</span></div></div></td>
+                    <td data-label="Role">Billing owner</td>
+                    <td data-label="Policy"><span class="badge ok">Compliant</span></td>
+                    <td data-label="Approval"><span class="badge ok">Approved</span></td>
+                    <td data-label="Last active" class="mono">1 hr ago</td>
+                    <td data-label="Owner">Revenue Ops</td>
+                    <td data-label="Action"><button type="button">Details</button></td>
+                  </tr>
+                  <tr class="selected">
+                    <td data-label="Select"><input type="checkbox" checked aria-label="Select Arjun Mehta"></td>
+                    <td data-label="User"><div class="user"><span class="avatar">AM</span><div><strong>Arjun Mehta</strong><span>arjun.mehta@acmebio.com</span></div></div></td>
+                    <td data-label="Role">API token admin</td>
+                    <td data-label="Policy"><span class="badge warn">Rotation overdue</span></td>
+                    <td data-label="Approval"><span class="badge info">Security review</span></td>
+                    <td data-label="Last active" class="mono">3 hrs ago</td>
+                    <td data-label="Owner">Platform Security</td>
+                    <td data-label="Action"><button type="button">Review</button></td>
+                  </tr>
+                  <tr>
+                    <td data-label="Select"><input type="checkbox" aria-label="Select Olivia Grant"></td>
+                    <td data-label="User"><div class="user"><span class="avatar">OG</span><div><strong>Olivia Grant</strong><span>olivia.grant@acmebio.com</span></div></div></td>
+                    <td data-label="Role">Read-only auditor</td>
+                    <td data-label="Policy"><span class="badge ok">Compliant</span></td>
+                    <td data-label="Approval"><span class="badge ok">Approved</span></td>
+                    <td data-label="Last active" class="mono">Today</td>
+                    <td data-label="Owner">Internal Audit</td>
+                    <td data-label="Action"><button type="button">Details</button></td>
+                  </tr>
+                  <tr>
+                    <td data-label="Select"><input type="checkbox" aria-label="Select Noemi Salazar"></td>
+                    <td data-label="User"><div class="user"><span class="avatar">NS</span><div><strong>Noemi Salazar</strong><span>noemi.salazar@acmebio.com</span></div></div></td>
+                    <td data-label="Role">Procurement approver</td>
+                    <td data-label="Policy"><span class="badge info">New role</span></td>
+                    <td data-label="Approval"><span class="badge warn">Legal pending</span></td>
+                    <td data-label="Last active" class="mono">Yesterday</td>
+                    <td data-label="Owner">Procurement</td>
+                    <td data-label="Action"><button type="button">Review</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <span>Page 1 of 141 / 50 rows per page</span>
+              <div class="top-actions"><button type="button">Previous</button><button type="button">Next</button></div>
+            </div>
+          </div>
+
+          <aside class="side-stack" aria-label="Detail and policy panels">
+            <section class="panel drawer" aria-labelledby="drawer-title">
+              <div class="panel-head"><div class="panel-title"><strong id="drawer-title">Review drawer</strong><span>Daniel Cho / External analyst</span></div><span class="badge bad">High risk</span></div>
+              <div class="drawer-body">
+                <div class="review-box"><strong>Reason for review</strong><p>Vendor account has not authenticated in 46 days and still has access to clinical trial exports.</p></div>
+                <div class="review-box"><strong>Required action</strong><p>Manager must confirm business need or access will suspend automatically on 30 Jun 2026.</p></div>
+                <div class="top-actions"><button class="primary" type="button">Request manager approval</button><button class="danger" type="button">Suspend now</button></div>
+              </div>
+            </section>
+
+            <section class="panel" id="policies" aria-labelledby="policy-title">
+              <div class="panel-head"><div class="panel-title"><strong id="policy-title">Policy controls</strong><span>Applied to Acme Biologics tenant</span></div></div>
+              <div class="drawer-body">
+                <div class="setting-row"><div><strong>Require MFA for privileged roles</strong><p>Blocks role elevation without verified MFA.</p></div><span class="switch" role="switch" aria-checked="true" tabindex="0"></span></div>
+                <div class="setting-row"><div><strong>Auto-suspend inactive vendors</strong><p>30-day inactivity threshold.</p></div><span class="switch" role="switch" aria-checked="true" tabindex="0"></span></div>
+                <div class="setting-row"><div><strong>Allow unmanaged API tokens</strong><p>Exception requires security approval.</p></div><span class="switch off" role="switch" aria-checked="false" tabindex="0"></span></div>
+              </div>
+            </section>
+          </aside>
+        </section>
+
+        <section class="lower-grid">
+          <article class="panel" id="permissions" aria-labelledby="matrix-title">
+            <div class="panel-head"><div class="panel-title"><strong id="matrix-title">Permission matrix</strong><span>Role scopes and consequences for high-risk actions.</span></div><button type="button">Edit roles</button></div>
+            <div class="matrix">
+              <table>
+                <thead><tr><th>Capability</th><th>Admin</th><th>Security</th><th>Finance</th><th>Auditor</th></tr></thead>
+                <tbody>
+                  <tr><td>Export financial reports</td><td><span class="badge ok">Allow</span></td><td><span class="badge info">Review</span></td><td><span class="badge ok">Allow</span></td><td><span class="badge info">Read only</span></td></tr>
+                  <tr><td>Rotate API tokens</td><td><span class="badge warn">Approval</span></td><td><span class="badge ok">Allow</span></td><td><span class="badge bad">Deny</span></td><td><span class="badge bad">Deny</span></td></tr>
+                  <tr><td>Approve vendor access</td><td><span class="badge warn">Manager</span></td><td><span class="badge warn">Manager</span></td><td><span class="badge bad">Deny</span></td><td><span class="badge bad">Deny</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel" id="audit" aria-labelledby="audit-title">
+            <div class="panel-head"><div class="panel-title"><strong id="audit-title">Audit trail</strong><span>Immutable events for SOC2 CC6.1 and CC6.2.</span></div><button type="button">Download evidence</button></div>
+            <div class="audit">
+              <div class="event"><time class="mono">14:22</time><div><strong>Access review opened</strong><span>Maya Kapoor opened Daniel Cho vendor review with reason code VENDOR_STALE.</span></div><span class="badge info">Review</span></div>
+              <div class="event"><time class="mono">13:58</time><div><strong>API token rotation failed</strong><span>Arjun Mehta token nb-prod-ledger-02 exceeded 90-day policy.</span></div><span class="badge bad">Failed</span></div>
+              <div class="event"><time class="mono">11:06</time><div><strong>SOC2 packet exported</strong><span>Olivia Grant generated access evidence for Q2 audit sample.</span></div><span class="badge ok">Complete</span></div>
+              <div class="event"><time class="mono">09:31</time><div><strong>New procurement approver requested</strong><span>Noemi Salazar role change routed to Legal and Finance Systems.</span></div><span class="badge warn">Pending</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="lower-grid" id="settings">
+          <article class="panel" aria-labelledby="settings-title">
+            <div class="panel-head"><div class="panel-title"><strong id="settings-title">Organization settings</strong><span>Security posture and tenant controls.</span></div></div>
+            <div class="drawer-body">
+              <div class="setting-row"><div><strong>SSO provider</strong><p>Okta SAML / enforced for 842 users</p></div><span class="badge ok">Healthy</span></div>
+              <div class="setting-row"><div><strong>SCIM sync</strong><p>Last sync 27 Jun 2026, 14:05 IST</p></div><span class="badge ok">Synced</span></div>
+              <div class="setting-row"><div><strong>Data residency</strong><p>Primary US, EU processing addendum active</p></div><span class="badge info">Configured</span></div>
+            </div>
+          </article>
+          <article class="panel" id="reports" aria-labelledby="reports-title">
+            <div class="panel-head"><div class="panel-title"><strong id="reports-title">Reporting queue</strong><span>Exports and approvals for governance packets.</span></div></div>
+            <div class="drawer-body">
+              <div class="setting-row"><div><strong>Q2 access certification</strong><p>842 users, 18 roles, 2 unresolved exceptions</p></div><span class="badge warn">Draft</span></div>
+              <div class="setting-row"><div><strong>SOC2 CC6 evidence</strong><p>Audit events, policy snapshots, approval records</p></div><span class="badge ok">Ready</span></div>
+              <div class="setting-row"><div><strong>Vendor access exceptions</strong><p>15 external users require owner confirmation</p></div><span class="badge bad">Action needed</span></div>
+            </div>
+          </article>
+        </section>
+      </div>
+    
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Permission consequence review before an admin action ships.</h2>
+        <p>Enterprise Minimal should make risk legible: affected users, role scope, audit reason, and confirmation language stay beside the table workflow.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="library-chart-wrap"><span class="artifact-pill">Chart.js powered</span><canvas class="library-chart" data-chart="bar" data-label="Access review coverage" data-values="58,66,74,82,91,97" aria-label="Access review coverage chart"></canvas></div>
+        <div class="artifact-row"><span class="artifact-node">G1</span><div><strong>Role scope delta</strong><span>Billing Admin gains invoice export and refund access</span></div><span class="artifact-pill">Risk</span></div>
+        <div class="artifact-row"><span class="artifact-node">G2</span><div><strong>Audit reason</strong><span>SOC2 quarterly access review - required</span></div><span class="artifact-pill">Audit</span></div>
+        <div class="artifact-row"><span class="artifact-node">G3</span><div><strong>Bulk action preview</strong><span>18 users selected, 3 require manager approval</span></div><span class="artifact-pill">Review</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Governance workflow proof">
+      <div>
+        <span class="proof-label">Governance workflow proof</span>
+        <h2>Admin software that earns trust through tables, permissions, and audit context.</h2>
+        <p>Northbank Control demonstrates a real access governance task: filtered users, bulk actions, role consequences, policy coverage, approval states, and audit evidence.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>842 users</strong><span>managed with role and SCIM context</span></div>
+        <div class="client-proof-kpi"><strong>18 roles</strong><span>permission scopes visible before edits</span></div>
+        <div class="client-proof-kpi"><strong>2.4k logs</strong><span>audit events tied to actor and target</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>Every destructive or privileged action has consequence copy, owner context, and review state.</span></div>
+      </div>
+    </section></main>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite">
+    <strong>Review view saved</strong>
+    <span>Filters, columns, and selected bulk actions are ready for the quarterly access review.</span>
+  </div>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+  <script type="module">
+    import { Chart, LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend } from "../../node_modules/chart.js/dist/chart.js";
+    Chart.register(LineController, LineElement, PointElement, BarController, BarElement, CategoryScale, LinearScale, Filler, Tooltip, Legend);
+    const canvas = document.querySelector(".library-chart");
+    if (canvas) {
+      const mode = canvas.dataset.chart || "line";
+      const grid = "rgba(148,163,184,.22)";
+      const ink = getComputedStyle(document.body).color || "#dbeafe";
+      new Chart(canvas, {
+        type: mode === "bar" ? "bar" : "line",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+          datasets: [{
+            label: canvas.dataset.label || "Product signal",
+            data: (canvas.dataset.values || "42,58,51,74,88,69").split(",").map(Number),
+            borderColor: "#67e8f9",
+            backgroundColor: mode === "bar" ? "rgba(103,232,249,.45)" : "rgba(103,232,249,.16)",
+            pointBackgroundColor: "#8b5cf6",
+            tension: .38,
+            fill: mode !== "bar",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { color: grid }, ticks: { color: ink } },
+            y: { grid: { color: grid }, ticks: { color: ink }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

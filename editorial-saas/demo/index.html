@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ledger & Line - Editorial SaaS</title>
+  <style>
+    :root {
+      --paper:#f6efe3;
+      --paper-deep:#eadcc8;
+      --sheet:#fffaf0;
+      --ink:#17130f;
+      --graphite:#433a32;
+      --muted:#776c61;
+      --rule:#d5c5b1;
+      --accent:#8f2f23;
+      --accent-dark:#5f211b;
+      --olive:#52633a;
+      --blue:#2f5f75;
+      --ok:#246b49;
+      --warn:#925d12;
+      --focus:#b64032;
+      --shadow:0 24px 70px rgba(61, 42, 23, .13);
+    }
+
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0;
+      min-height:100vh;
+      color:var(--ink);
+      background:
+        linear-gradient(90deg, rgba(23,19,15,.035) 1px, transparent 1px) 0 0 / 72px 72px,
+        linear-gradient(180deg, var(--paper), #f9f2e8 42%, var(--paper-deep));
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing:0;
+    }
+
+    body::before {
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:radial-gradient(circle at 20% 0%, rgba(143,47,35,.09), transparent 34%), linear-gradient(rgba(255,255,255,.22), rgba(255,255,255,0));
+      mix-blend-mode:multiply;
+    }
+
+    a, button, input { font:inherit; }
+    a { color:inherit; text-decoration-thickness:1px; text-underline-offset:4px; }
+    a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline:3px solid var(--focus);
+      outline-offset:4px;
+      border-radius:8px;
+    }
+
+    .page { width:min(1180px, calc(100% - 32px)); margin:0 auto; padding:24px 0 64px; }
+    .masthead {
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      gap:18px;
+      padding:14px 0 18px;
+      border-bottom:1px solid var(--ink);
+      position:relative;
+      z-index:1;
+    }
+    .brand { font-family:Georgia, "Times New Roman", serif; font-size:1.35rem; font-weight:700; text-decoration:none; justify-self:center; }
+    .issue { color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; }
+    .nav { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+    .nav a { text-decoration:none; color:var(--graphite); padding:8px 10px; border-radius:999px; }
+    .nav a:hover { background:rgba(143,47,35,.09); color:var(--accent-dark); }
+
+    .button {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:42px;
+      padding:10px 15px;
+      border:1px solid var(--ink);
+      border-radius:999px;
+      background:transparent;
+      color:var(--ink);
+      font-weight:750;
+      text-decoration:none;
+      cursor:pointer;
+      transition:transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+    }
+    .button:hover { transform:translateY(-2px); background:var(--ink); color:var(--sheet); box-shadow:0 14px 34px rgba(23,19,15,.16); }
+    .button.primary { background:var(--accent); border-color:var(--accent); color:#fffaf0; }
+    .button.primary:hover { background:var(--accent-dark); }
+
+    .hero {
+      display:grid;
+      grid-template-columns:minmax(0, 1.1fr) 360px;
+      gap:44px;
+      padding:54px 0 42px;
+      border-bottom:1px solid var(--rule);
+      align-items:end;
+    }
+    .kicker, .caption, .label {
+      color:var(--accent);
+      font-size:.76rem;
+      font-weight:800;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+    }
+    h1, h2, h3, p { margin-top:0; }
+    h1 {
+      font-family:Georgia, "Times New Roman", serif;
+      font-size:clamp(3.1rem, 8vw, 7.8rem);
+      line-height:.88;
+      letter-spacing:0;
+      font-weight:500;
+      margin:14px 0 20px;
+      max-width:900px;
+    }
+    h2 {
+      font-family:Georgia, "Times New Roman", serif;
+      font-size:clamp(2rem, 4.8vw, 4.6rem);
+      line-height:.96;
+      font-weight:500;
+      letter-spacing:0;
+      margin-bottom:18px;
+    }
+    h3 { font-size:1rem; line-height:1.18; margin-bottom:8px; }
+    p { color:var(--graphite); line-height:1.68; }
+    .deck { max-width:760px; font-size:clamp(1.05rem, 2vw, 1.35rem); color:var(--graphite); }
+    .hero-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:26px; }
+
+    .brief {
+      background:var(--sheet);
+      border:1px solid var(--ink);
+      box-shadow:var(--shadow);
+      padding:18px;
+      transform:rotate(1.2deg);
+      animation:paperIn .75s ease both;
+    }
+    .brief-top { display:flex; justify-content:space-between; gap:16px; align-items:start; padding-bottom:14px; border-bottom:1px solid var(--rule); }
+    .brief-title { font-family:Georgia, "Times New Roman", serif; font-size:1.45rem; line-height:1.02; }
+    .stamp { border:1px solid var(--accent); color:var(--accent); padding:5px 8px; border-radius:999px; font-size:.72rem; font-weight:800; white-space:nowrap; }
+    .brief-row { display:grid; grid-template-columns:1fr auto; gap:14px; padding:12px 0; border-bottom:1px solid var(--rule); }
+    .brief-row strong { display:block; font-size:.9rem; }
+    .brief-row span { color:var(--muted); font-size:.84rem; }
+    .value { font-family:Georgia, "Times New Roman", serif; font-size:1.35rem; color:var(--ink); }
+
+    .spread {
+      display:grid;
+      grid-template-columns:170px minmax(0, .9fr) minmax(340px, 1.15fr);
+      gap:34px;
+      padding:64px 0;
+      border-bottom:1px solid var(--rule);
+      align-items:start;
+    }
+    .side-note { color:var(--muted); font-size:.88rem; line-height:1.5; border-top:3px solid var(--ink); padding-top:12px; }
+    .side-note strong { display:block; color:var(--ink); margin-bottom:8px; }
+    .article p:first-of-type::first-letter {
+      font-family:Georgia, "Times New Roman", serif;
+      float:left;
+      font-size:4.8rem;
+      line-height:.78;
+      padding:8px 8px 0 0;
+      color:var(--accent);
+    }
+
+    .artifact {
+      background:#fcf7ed;
+      border:1px solid var(--ink);
+      box-shadow:var(--shadow);
+      padding:16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .artifact::before {
+      content:"";
+      position:absolute;
+      inset:0 0 auto;
+      height:5px;
+      background:linear-gradient(90deg, var(--accent), var(--olive), var(--blue));
+    }
+    .artifact-head { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; padding:12px 0 14px; border-bottom:1px solid var(--rule); }
+    .artifact-title { font-weight:850; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:5px 8px; border:1px solid var(--rule); border-radius:999px; background:#fff; color:var(--muted); font-size:.78rem; font-weight:800; }
+    .dot { width:7px; height:7px; border-radius:99px; background:var(--ok); box-shadow:0 0 0 4px rgba(36,107,73,.13); }
+    .dot.warn { background:var(--warn); box-shadow:0 0 0 4px rgba(146,93,18,.13); }
+    .source-table { display:grid; gap:8px; margin-top:14px; }
+    .source-row { display:grid; grid-template-columns:1.2fr .8fr auto; gap:12px; align-items:center; padding:11px; border:1px solid var(--rule); background:#fffaf4; }
+    .source-row strong, .note-card strong { display:block; font-size:.9rem; color:var(--ink); }
+    .source-row span, .note-card span { color:var(--muted); font-size:.82rem; }
+    .annotation {
+      margin-top:14px;
+      padding:12px 12px 12px 16px;
+      border-left:4px solid var(--accent);
+      background:#f3e6d8;
+    }
+    figcaption { margin-top:12px; color:var(--muted); font-size:.86rem; line-height:1.5; }
+
+    .feature-spread {
+      display:grid;
+      grid-template-columns:minmax(0, .95fr) minmax(0, 1.15fr);
+      gap:36px;
+      padding:66px 0;
+      border-bottom:1px solid var(--rule);
+      align-items:center;
+    }
+    .notes-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .note-card { padding:14px; background:#fff8ec; border:1px solid var(--rule); min-height:112px; transition:transform .18s ease, border-color .18s ease; }
+    .note-card:hover { transform:translateY(-3px); border-color:var(--accent); }
+    .metric-strip { display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); margin-top:18px; }
+    .metric { background:#fffaf0; padding:16px; }
+    .metric b { display:block; font-family:Georgia, "Times New Roman", serif; font-size:2.1rem; font-weight:500; color:var(--ink); }
+    .metric span { color:var(--muted); font-size:.82rem; }
+
+    .pullquote {
+      padding:74px 0;
+      border-bottom:1px solid var(--rule);
+      display:grid;
+      grid-template-columns:1fr 310px;
+      gap:44px;
+      align-items:end;
+    }
+    blockquote { margin:0; }
+    blockquote p {
+      font-family:Georgia, "Times New Roman", serif;
+      font-size:clamp(2rem, 5.5vw, 5.25rem);
+      line-height:.98;
+      color:var(--ink);
+      margin-bottom:20px;
+    }
+    cite { color:var(--muted); font-style:normal; }
+    .case-card { background:var(--ink); color:var(--sheet); padding:18px; border-radius:0; }
+    .case-card p, .case-card span { color:#d9cdbf; }
+    .case-card .label { color:#e5aa9b; }
+
+    .comparison {
+      padding:66px 0;
+      border-bottom:1px solid var(--rule);
+    }
+    .compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:24px; }
+    .compare { border:1px solid var(--rule); background:#fff8ec; padding:18px; }
+    .compare.after { border-color:var(--accent); box-shadow:var(--shadow); }
+    .checkline { display:flex; gap:10px; padding:11px 0; border-bottom:1px solid var(--rule); color:var(--graphite); }
+    .checkline:last-child { border-bottom:0; }
+    .mark { color:var(--accent); font-weight:900; }
+
+    .note-section {
+      display:grid;
+      grid-template-columns:minmax(0, .8fr) minmax(0, 1.2fr);
+      gap:36px;
+      padding:64px 0;
+      border-bottom:1px solid var(--rule);
+    }
+    .founder {
+      background:#fffaf0;
+      border:1px solid var(--ink);
+      padding:26px;
+      box-shadow:var(--shadow);
+    }
+    .signature { font-family:Georgia, "Times New Roman", serif; font-size:1.6rem; color:var(--accent); margin-top:18px; }
+
+    .cta {
+      display:grid;
+      grid-template-columns:1fr 340px;
+      gap:32px;
+      align-items:end;
+      padding:58px 0 0;
+    }
+    .form { display:grid; gap:10px; background:var(--sheet); border:1px solid var(--ink); padding:18px; box-shadow:var(--shadow); }
+    input { width:100%; min-height:44px; border:1px solid var(--rule); background:#fff; padding:10px 12px; color:var(--ink); }
+    input::placeholder { color:#9a8d80; }
+
+    .reveal { animation:fadeUp .7s ease both; }
+    .wipe { animation:wipe .8s ease both; transform-origin:left; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } }
+    @keyframes wipe { from { opacity:.2; transform:scaleX(.92); } }
+    @keyframes paperIn { from { opacity:0; transform:translateY(18px) rotate(0deg); } }
+
+    @media (max-width: 940px) {
+      .masthead { grid-template-columns:1fr; }
+      .brand { justify-self:start; }
+      .nav { justify-content:flex-start; }
+      .hero, .spread, .feature-spread, .pullquote, .note-section, .cta { grid-template-columns:1fr; gap:24px; }
+      .brief { transform:none; }
+      .side-note { max-width:420px; }
+      .source-row { grid-template-columns:1fr; }
+      .metric-strip, .compare-grid, .notes-grid { grid-template-columns:1fr; }
+      .page { width:min(100% - 24px, 720px); padding-top:14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration:.001ms !important;
+        animation-iteration-count:1 !important;
+        scroll-behavior:auto !important;
+        transition:none !important;
+      }
+      .button:hover, .note-card:hover { transform:none; }
+    }
+  
+    /* Client-grade proof band: each demo must feel like a funded product, not a style exercise. */
+    .client-proof {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .client-proof h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.4vw, 2.15rem); line-height: 1.04; }
+    .client-proof p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .client-proof .proof-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 800; text-transform: uppercase; }
+    .client-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .client-proof-kpi, .client-proof-note { padding: 12px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.055); }
+    .client-proof-kpi strong { display: block; font-size: 1.45rem; line-height: 1; }
+    .client-proof-kpi span, .client-proof-note span { display: block; margin-top: 6px; color: var(--muted, #8b98aa); font-size: .84rem; line-height: 1.35; }
+    .client-proof-note { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .client-proof-note b { font-size: .94rem; }
+
+    @media (max-width: 860px) {
+      .client-proof { grid-template-columns: 1fr; }
+      .client-proof-grid { grid-template-columns: 1fr; }
+      .client-proof-note { grid-template-columns: 1fr; }
+    }
+  
+    /* Signature artifact: a style-specific product moment that makes the demo feel sellable. */
+    .signature-artifact {
+      width: min(100%, 1180px);
+      margin: 18px auto 0;
+      padding: 18px;
+      border: 1px solid var(--line, rgba(148, 163, 184, .24));
+      border-radius: var(--radius, 10px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.025)),
+        var(--panel, var(--surface, rgba(15, 23, 42, .82)));
+      box-shadow: 0 26px 70px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: minmax(0, .85fr) minmax(300px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .signature-artifact h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 2.6vw, 2.35rem); line-height: 1.02; }
+    .signature-artifact p { margin: 0; color: var(--muted, #8b98aa); line-height: 1.6; }
+    .signature-label { display: inline-flex; width: max-content; margin-bottom: 12px; padding: 6px 9px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .78rem; font-weight: 850; text-transform: uppercase; }
+    .artifact-board { display: grid; gap: 10px; }
+    .artifact-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 11px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: var(--radius, 10px); background: rgba(255,255,255,.06); }
+    .artifact-node { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: white; background: linear-gradient(135deg, var(--accent, var(--blue, #315dff)), var(--accent-2, var(--cyan, #14a6a6))); font-weight: 900; font-size: .78rem; }
+    .artifact-row strong { display: block; font-size: .95rem; }
+    .artifact-row span { display: block; margin-top: 3px; color: var(--muted, #8b98aa); font-size: .82rem; line-height: 1.35; }
+    .artifact-pill { padding: 5px 8px; border: 1px solid var(--line, rgba(148, 163, 184, .24)); border-radius: 999px; color: var(--muted, #8b98aa); font-size: .76rem; font-weight: 850; white-space: nowrap; }
+
+    @media (max-width: 860px) {
+      .signature-artifact { grid-template-columns: 1fr; }
+      .artifact-row { grid-template-columns: auto 1fr; }
+      .artifact-pill { grid-column: 2; width: max-content; }
+    }
+  
+    /* Proof sections stay below app shells, dashboards, and split-pane layouts. */
+    .client-proof,
+    .signature-artifact {
+      grid-column: 1 / -1;
+      position: relative;
+      z-index: 2;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead" aria-label="Ledger & Line masthead">
+      <div class="issue">Vol. 06 / Finance narrative systems</div>
+      <a class="brand" href="../../index.html">Ledger & Line</a>
+      <nav class="nav" aria-label="Section navigation">
+        <a href="#artifact">Product proof</a>
+        <a href="#case">Case study</a>
+        <a href="#compare">Plans</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="reveal">
+          <div class="kicker">Editorial SaaS for CFO teams</div>
+          <h1 id="hero-title">The board deck should know where the numbers came from.</h1>
+          <p class="deck">Ledger & Line turns monthly business reporting into an authored, source-linked product workflow for finance teams that need narrative authority and audit-ready evidence.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#briefing">Request briefing</a>
+            <a class="button" href="#artifact">Read the product story</a>
+          </div>
+        </div>
+
+        <aside class="brief" aria-label="Executive report preview">
+          <div class="brief-top">
+            <div>
+              <div class="label">Executive brief</div>
+              <div class="brief-title">Q3 margin narrative, board ready</div>
+            </div>
+            <span class="stamp">Verified</span>
+          </div>
+          <div class="brief-row">
+            <div><strong>Revenue variance</strong><span>CRM, warehouse, billing ledger</span></div>
+            <div class="value">+8.4%</div>
+          </div>
+          <div class="brief-row">
+            <div><strong>Open approvals</strong><span>Controller, RevOps, Legal</span></div>
+            <div class="value">3</div>
+          </div>
+          <div class="brief-row">
+            <div><strong>Source confidence</strong><span>172 checks complete</span></div>
+            <div class="value">96%</div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="spread" aria-labelledby="narrative-title">
+        <aside class="side-note">
+          <strong>The premise</strong>
+          Finance teams do not need another slide template. They need a reporting system that preserves judgment, source lineage, and the sentence that explains the number.
+        </aside>
+        <article class="article reveal">
+          <div class="kicker">Product narrative</div>
+          <h2 id="narrative-title">A close process with a byline, not a scavenger hunt.</h2>
+          <p>Every month-end story has three fragile parts: the metric, the source, and the explanation. Ledger & Line keeps them together while controllers, RevOps, and regional leads edit the same operating narrative.</p>
+          <p>Drafts read like an executive memo, but behave like software. A margin note can cite the warehouse table, request a regional approval, flag a stale forecast, and export into a board appendix without losing context.</p>
+        </article>
+        <figure class="artifact wipe" id="artifact">
+          <div class="artifact-head">
+            <div>
+              <div class="label">Artifact 01</div>
+              <div class="artifact-title">Variance note: EMEA expansion revenue</div>
+            </div>
+            <span class="pill"><span class="dot"></span>Live sources</span>
+          </div>
+          <div class="source-table" role="list" aria-label="Source evidence list">
+            <div class="source-row" role="listitem">
+              <div><strong>CRM opportunities</strong><span>Salesforce export, June 26 at 09:12</span></div>
+              <span class="pill">Owner: RevOps</span>
+              <strong>+12.6%</strong>
+            </div>
+            <div class="source-row" role="listitem">
+              <div><strong>Recognized revenue</strong><span>NetSuite close table, Q3 period 09</span></div>
+              <span class="pill"><span class="dot warn"></span>Review</span>
+              <strong>$4.8M</strong>
+            </div>
+            <div class="source-row" role="listitem">
+              <div><strong>Board sentence</strong><span>Drafted by Maya Chen, Controller</span></div>
+              <span class="pill">Approved</span>
+              <strong>v7</strong>
+            </div>
+          </div>
+          <div class="annotation"><strong>Suggested edit:</strong> Mention channel mix, not pricing, as the primary margin driver. Two source rows changed since the last board readout.</div>
+          <figcaption>Product evidence stays attached to the paragraph it supports, so the executive story can be read, reviewed, and audited in one place.</figcaption>
+        </figure>
+      </section>
+
+      <section class="feature-spread" aria-labelledby="features-title">
+        <div>
+          <div class="kicker">Feature spread</div>
+          <h2 id="features-title">The product is the newsroom for business performance.</h2>
+          <p class="deck">Not chat, not deckware. Ledger & Line gives finance leaders an editorial desk for claims, sources, approvals, and final distribution.</p>
+          <div class="metric-strip" aria-label="Reported customer outcomes">
+            <div class="metric"><b>41%</b><span>fewer version-control issues</span></div>
+            <div class="metric"><b>18h</b><span>saved per close cycle</span></div>
+            <div class="metric"><b>2.4x</b><span>faster board appendix prep</span></div>
+          </div>
+        </div>
+        <div class="notes-grid">
+          <article class="note-card" tabindex="0"><strong>Source-linked prose</strong><span>Each claim cites source tables, owners, timestamps, and review state.</span></article>
+          <article class="note-card" tabindex="0"><strong>Approval margin</strong><span>Legal, RevOps, and regional finance approve the exact sentence they own.</span></article>
+          <article class="note-card" tabindex="0"><strong>Evidence appendix</strong><span>Export the board deck, memo, and source appendix from one governed draft.</span></article>
+          <article class="note-card" tabindex="0"><strong>Executive read mode</strong><span>Switch from editing to a polished narrative readout with unresolved risks surfaced.</span></article>
+        </div>
+      </section>
+
+      <section class="pullquote" id="case" aria-labelledby="case-title">
+        <blockquote>
+          <div class="kicker">Customer story</div>
+          <p id="case-title">"The close meeting changed from defending slides to deciding what to do next."</p>
+          <cite>Mira Patel, VP Finance at Meridian Foods, after rolling Ledger & Line across 14 countries</cite>
+        </blockquote>
+        <aside class="case-card">
+          <div class="label">Case-study proof</div>
+          <h3>Meridian Foods reduced regional commentary drift by 63% in two quarters.</h3>
+          <p>The team replaced 38 spreadsheet tabs and 11 slide owners with one editorial reporting workflow, then attached every board claim to its live source.</p>
+          <span>Scope: revenue, gross margin, channel mix, regional forecast risk</span>
+        </aside>
+      </section>
+
+      <section class="comparison" id="compare" aria-labelledby="compare-title">
+        <div class="kicker">Comparison and pricing</div>
+        <h2 id="compare-title">A reporting stack priced for teams that publish decisions.</h2>
+        <p class="deck">Start with the Controller Desk for monthly reporting, then add enterprise governance when board, audit, and regional workflows converge.</p>
+        <div class="compare-grid">
+          <article class="compare">
+            <div class="label">Before Ledger & Line</div>
+            <div class="checkline"><span class="mark">-</span><span>Copy-pasted metrics with source links hidden in comments.</span></div>
+            <div class="checkline"><span class="mark">-</span><span>Separate slide, memo, and appendix workflows.</span></div>
+            <div class="checkline"><span class="mark">-</span><span>Approvals collected after the narrative has already changed.</span></div>
+          </article>
+          <article class="compare after">
+            <div class="label">Controller Desk / from $18K per year</div>
+            <div class="checkline"><span class="mark">+</span><span>Source-linked narrative builder for close and forecast reviews.</span></div>
+            <div class="checkline"><span class="mark">+</span><span>Approval margin, audit appendix, and board-ready export.</span></div>
+            <div class="checkline"><span class="mark">+</span><span>Enterprise add-on for SSO, retention policy, and multi-entity reporting.</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="note-section" aria-labelledby="founder-title">
+        <div class="side-note">
+          <strong>Product note</strong>
+          Built for finance teams whose work is reviewed by executives, auditors, and operating leaders. The interface favors traceability over spectacle.
+        </div>
+        <article class="founder">
+          <div class="kicker">From the product desk</div>
+          <h2 id="founder-title">The sentence is part of the system.</h2>
+          <p>We built Ledger & Line because the most important finance work often happens after the numbers are correct. It happens when someone explains what changed, why it matters, and what the business should do next.</p>
+          <p>That explanation deserves the same governance as the source table beneath it.</p>
+          <div class="signature">Anika Rao, founder</div>
+        </article>
+      </section>
+
+      <section class="cta" id="briefing" aria-labelledby="cta-title">
+        <div>
+          <div class="kicker">Final readout</div>
+          <h2 id="cta-title">Bring your next board narrative. We will trace one claim from source to sentence.</h2>
+          <p class="deck">A 30-minute briefing for CFOs, controllers, and finance transformation leaders evaluating governed reporting workflows.</p>
+        </div>
+        <form class="form" aria-label="Request a product briefing">
+          <label>
+            <span class="label">Work email</span>
+            <input type="email" placeholder="maya@company.com" autocomplete="email">
+          </label>
+          <button class="button primary" type="submit">Request briefing</button>
+          <p class="caption">No external assets, no remote dependencies, just a product story you can inspect.</p>
+        </form>
+      </section>
+    
+    
+    <section class="signature-artifact" aria-label="Signature artifact">
+      <div>
+        <span class="signature-label">Signature artifact</span>
+        <h2>Annotated product evidence embedded inside the story.</h2>
+        <p>Editorial SaaS works when the article rhythm is interrupted by proof: a source-backed artifact, a quote, a metric, and a reason to convert.</p>
+      </div>
+      <div class="artifact-board">
+        <div class="artifact-row"><span class="artifact-node">E1</span><div><strong>Source table excerpt</strong><span>38 finance sources normalized into board packet</span></div><span class="artifact-pill">Proof</span></div>
+        <div class="artifact-row"><span class="artifact-node">E2</span><div><strong>Type-led claim</strong><span>Large headline resolves into product evidence</span></div><span class="artifact-pill">Motion</span></div>
+        <div class="artifact-row"><span class="artifact-node">E3</span><div><strong>Executive briefing CTA</strong><span>Conversion follows case-study proof</span></div><span class="artifact-pill">CTA</span></div>
+      </div>
+    </section><section class="client-proof" aria-label="Editorial product proof">
+      <div>
+        <span class="proof-label">Editorial product proof</span>
+        <h2>A point-of-view SaaS page with type rhythm and evidence attached to every claim.</h2>
+        <p>Ledger & Line combines editorial pacing, source-table artifacts, annotated metrics, pull quotes, pricing proof, and restrained headline motion inside one finance workflow story.</p>
+      </div>
+      <div class="client-proof-grid">
+        <div class="client-proof-kpi"><strong>38 sources</strong><span>normalized into board-ready finance packets</span></div>
+        <div class="client-proof-kpi"><strong>6.2 hrs</strong><span>saved per monthly reporting cycle</span></div>
+        <div class="client-proof-kpi"><strong>99.7%</strong><span>traceable source coverage in final packet</span></div>
+        <div class="client-proof-note"><b>Buyer proof</b><span>The playbook now carries the former type-motion rules so generated pages can feel authored without becoming abstract typography posters.</span></div>
+      </div>
+    </section></main>
+  </div>
+  <script type="module">
+    import { gsap } from "../../node_modules/gsap/index.js";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      gsap.from(".topbar, .brand, header, .hero, .workspace, .workbench, .app, .shell > section:first-of-type", { opacity: 0, y: 18, duration: 0.72, ease: "power3.out", stagger: 0.05 });
+      gsap.from(".card, .panel, .metric-card, .feature-card, .client-proof, .signature-artifact", { opacity: 0, y: 22, duration: 0.62, ease: "power2.out", stagger: 0.035, delay: 0.12 });
+      gsap.to(".artifact-node", { y: -2, duration: 1.8, repeat: -1, yoyo: true, ease: "sine.inOut", stagger: 0.12 });
+    }
+  </script>
+</body>
+</html>
