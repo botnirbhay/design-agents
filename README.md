@@ -5,7 +5,7 @@ This repo is a curated library of high-end UI style agents. Each style folder co
 - `AGENTS.md` is the reusable design playbook. This is the main product: someone can give it to an agent and get work in the same design direction.
 - `demo/index.html` is the proof page. It shows what that playbook should produce when the rules are followed well.
 
-The demos are intentionally built as real product surfaces, not generic mood boards. They use local Node packages for motion, charts, and 3D where that makes the style more convincing.
+The demos are intentionally built as real product surfaces, not generic mood boards
 
 ## Quick Start
 
